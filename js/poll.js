@@ -40,10 +40,10 @@ function generateDates() {
         label.className = 'date-checkbox';
         label.innerHTML = `
             <input type="checkbox" name="dates" value="${dateStr}">
-            <span class="date-custom">
+            <div class="date-custom">
                 <div>${dayName}</div>
                 <div>${dateStr}</div>
-            </span>
+            </div>
         `;
         
         datesGrid.appendChild(label);
