@@ -1,409 +1,306 @@
-# Iizuka Lab Dinner Poll System
+# Iizuka Lab Group Dinner Poll System 🍜
 
-完整的研究组聚餐投票和管理系统,支持投票收集、价格计算、付款追踪和投票归档管理。
+A comprehensive web-based poll system designed specifically for research groups to organize dinner gatherings with advanced features including percentage-based pricing, payment tracking, and poll archiving.
 
-## 🌟 主要功能
+## 🌟 Key Features
 
-### 📝 投票收集
-- 参与者姓名
-- 出席意愿 (是/否)
-- 职称选择 (硕士生/博士生/教师职工)
-- 多个可用日期选择
-- 响应式表单设计
+### Poll Collection
+- ✅ **Name Collection** - Gather respondent names
+- ✅ **Attendance Tracking** - Yes/No attendance selection
+- ✅ **Title/Position Selection** - Master Student, Doctoral Student, Teachers and Staff
+- ✅ **Date Availability (Optional)** - Select from 14 upcoming dates (fully optional, no dates required)
+- ✅ **Dynamic Title** - Customizable poll title with smart defaults
 
-### 📊 管理仪表板
-- 实时统计显示
-- 交互式图表展示最受欢迎的日期
-- 完整的回复表格
-- 高级筛选和搜索
+### Admin Dashboard
+- ✅ **Real-time Statistics** - Total responses, attending, not attending, paid
+- ✅ **Visual Data Chart** - Interactive bar chart showing most popular dates
+- ✅ **Comprehensive Table** - View all responses with filtering and search
+- ✅ **Payment Tracking** - Checkbox system to track who has paid
+- ✅ **Multiple Filters** - Filter by attendance, payment status, or search by name
 
-### 💰 智能定价系统
-- 基于百分比的价格分配
-- 三类人员独立定价
-- 自动计算每人应付金额
-- 实时价格预览
+### Percentage-Based Pricing System
+- ✅ **Flexible Cost Allocation** - Set percentages for each group (e.g., 20%, 30%, 50%)
+- ✅ **Automatic Calculation** - System calculates per-person cost based on attendance
+- ✅ **Real-time Preview** - See price breakdown before saving
+- ✅ **100% Validation** - Ensures percentages total exactly 100%
 
-### ✅ 付款追踪
-- 每个回复旁边有付款复选框
-- 视觉状态指示器
-- 付款统计显示
-- 按付款状态筛选
+### Poll Management & Archiving
+- ✅ **Save to Archive** - Save current poll with all data intact
+- ✅ **Start New Poll** - Begin fresh poll while preserving archives
+- ✅ **View Archives** - Browse all archived polls with statistics
+- ✅ **Restore Archives** - Recover any archived poll
+- ✅ **Export Archives** - Export archived data to XLSX
+- ✅ **Delete Archives** - Remove old archives permanently
 
-### 🗂️ **投票归档管理** (新功能!)
+### Data Export
+- ✅ **CSV Export** - Simple comma-separated format
+- ✅ **XLSX Export** - Excel format with multiple sheets (responses + statistics)
+- ✅ **PDF Export** - Professional report format
+- ✅ **All Include Prices** - Exports contain calculated prices and payment status
 
-#### 保存当前投票
-- 为当前投票命名并保存到归档
-- 保存所有回复、设置和统计信息
-- 当前投票数据不会被清除
+### Security & Settings
+- ✅ **Password Protection** - Secure admin access
+- ✅ **Changeable Password** - Update password anytime
+- ✅ **24-hour Sessions** - Automatic logout after 24 hours
+- ✅ **Data Persistence** - All data stored in browser localStorage
 
-#### 开始新投票
-- 清除所有当前回复
-- 保留管理员设置(密码、价格、标题)
-- 确认对话框防止误操作
+## 🎨 Design Features
 
-#### 查看归档投票
-- 显示所有已保存的投票列表
-- 每个归档显示:
-  - 投票名称和日期
-  - 回复总数
-  - 参加人数
-  - 已付款人数
+- **Modern UI** - Beautiful gradient design with smooth animations
+- **Responsive Layout** - Works perfectly on mobile, tablet, and desktop
+- **Intuitive Navigation** - Easy-to-use interface for all users
+- **Professional Charts** - Chart.js powered visualizations
+- **Custom Icons** - Font Awesome icons throughout
 
-#### 恢复归档投票
-- 将归档的投票恢复为当前投票
-- 恢复所有回复和设置
-- 确认对话框防止误操作
-
-#### 导出归档投票
-- 直接导出归档的投票数据
-- XLSX格式,包含所有信息
-- 无需先恢复归档
-
-#### 删除归档投票
-- 永久删除不需要的归档
-- 确认对话框防止误删除
-
-### 🏷️ 标题自定义
-- 智能默认标题 (自动包含月份和年份)
-- 自由修改投票标题
-- 一键恢复默认
-
-### 📤 数据导出
-- CSV格式
-- XLSX格式 (多工作表)
-- PDF格式 (专业报告)
-- 所有格式包含价格和付款状态
-
-### 🔐 安全功能
-- 密码保护管理页面
-- 24小时会话管理
-- 可修改管理员密码
-
-## 📁 文件结构
+## 📁 Project Structure
 
 ```
-project/
-├── index.html              # 投票表单页面
-├── admin-login.html        # 管理员登录页面
-├── admin.html              # 管理员仪表板
+dinner-poll-system/
+├── index.html              # Main poll form
+├── admin-login.html        # Admin authentication page
+├── admin.html              # Admin dashboard
 ├── css/
-│   ├── style.css          # 投票表单样式
-│   └── admin.css          # 管理页面样式
+│   ├── style.css          # Poll form styles
+│   └── admin.css          # Admin dashboard styles
 └── js/
-    ├── poll.js            # 投票表单逻辑
-    ├── login.js           # 登录验证逻辑
-    └── admin.js           # 管理功能 (包含归档管理)
+    ├── poll.js            # Poll form logic
+    ├── login.js           # Authentication logic
+    └── admin.js           # Admin dashboard functionality
 ```
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 访问投票页面
-打开 `index.html` 即可访问投票表单。
+### 1. Deployment
+1. Upload all files to your web server or GitHub Pages
+2. Maintain the folder structure (css/, js/)
+3. Ensure all files are in the root directory
 
-### 2. 管理员登录
-- 点击页面底部的 "Admin" 链接
-- 或直接访问 `admin-login.html`
-- 默认密码: `iizukalab`
-- **首次登录后请立即修改密码!**
+### 2. First Time Setup
+1. Visit `admin-login.html`
+2. Default password: **`iizukalab`**
+3. **Immediately change the password** in Settings
 
-### 3. 配置设置
+### 3. Configure Poll
+1. Go to "Poll Title Settings" to customize the title
+2. Go to "Price Settings" to set up cost allocation
+3. Share the `index.html` link with your group
 
-#### 设置投票标题
-1. 登录管理页面
-2. 点击 "Title Settings"
-3. 输入自定义标题或使用默认
-4. 点击保存
+### 4. Manage Responses
+1. View responses in the admin dashboard
+2. Track payments with checkboxes
+3. Export data when needed
+4. Archive poll when done
 
-#### 设置价格
-1. 点击 "Price Settings"
-2. 输入总费用
-3. 设置三类人员的百分比 (必须总和为100%)
-4. 查看实时预览
-5. 点击保存
+## 💡 Usage Guide
 
-### 4. 管理投票归档
+### For Participants
 
-#### 保存当前投票到归档
-1. 点击 "Poll Management"
-2. 点击 "Save Current Poll to Archive"
-3. 输入投票名称 (例如: "November 2024 Dinner")
-4. 点击保存
+1. **Open Poll Page** - Visit the shared index.html link
+2. **Fill Information**:
+   - Enter your name
+   - Select Yes/No for attendance
+   - Choose your title (Master/Doctoral/Staff)
+   - (Optional) Select available dates if attending
+3. **Submit** - Click the submit button
+4. **Done!** - See confirmation message
 
-#### 开始新投票
-1. 点击 "Poll Management"
-2. 点击 "Start New Poll"
-3. 确认操作 (建议先保存当前投票)
-4. 所有回复将被清除,设置保持不变
+**Note**: Date selection is completely optional. If you're attending but have no date preferences, simply don't select any dates.
 
-#### 查看和管理归档
-1. 点击 "Poll Management"
-2. 点击 "View Archived Polls"
-3. 在列表中可以:
-   - **Restore**: 恢复归档为当前投票
-   - **Export**: 导出归档数据为XLSX
-   - **Delete**: 删除归档
+### For Administrators
 
-### 5. 收集回复
-- 分享投票页面链接给参与者
-- 在管理页面实时查看回复
-- 使用图表选择最合适的日期
+#### Managing Current Poll
 
-### 6. 追踪付款
-- 查看每人的应付金额
-- 收到款后勾选付款复选框
-- 使用筛选查看未付款成员
+1. **Login** - Use admin-login.html with your password
+2. **View Dashboard** - See real-time statistics and chart
+3. **Track Payments** - Check boxes for paid attendees
+4. **Filter/Search** - Find specific responses
+5. **Export Data** - Download reports in various formats
 
-### 7. 导出数据
-- 选择导出格式 (CSV/XLSX/PDF)
-- 下载包含所有信息的报告
+#### Price Configuration
 
-## 💡 使用场景示例
+1. Click **"Price Settings"**
+2. Enter **Total Cost** (e.g., 10000)
+3. Set **Percentages**:
+   - Master Students: e.g., 20%
+   - Doctoral Students: e.g., 30%
+   - Teachers and Staff: e.g., 50%
+4. **Preview** prices automatically
+5. **Save** when total = 100%
 
-### 场景1: 组织年度聚餐
+**Example**:
+- Total: ¥10,000
+- Master (20%): 4 people = ¥500/person
+- Doctoral (30%): 3 people = ¥1,000/person
+- Staff (50%): 2 people = ¥2,500/person
 
-**第1步: 创建新投票**
-```
-1. 登录管理页面
-2. 设置标题: "Iizuka Lab Year-End Celebration 2024"
-3. 设置价格: 总费用 ¥30,000
-   - 硕士生: 15%
-   - 博士生: 35%
-   - 教师: 50%
-```
+#### Poll Archiving
 
-**第2步: 收集回复**
-```
-1. 分享链接给所有成员
-2. 在管理页面查看实时回复
-3. 使用图表选择最合适的日期
-```
+**Save Current Poll**:
+1. Click "Poll Management"
+2. Click "Save Current Poll to Archive"
+3. Enter archive name (e.g., "November 2024 Dinner")
+4. Current poll data is preserved
 
-**第3步: 确定日期后追踪付款**
-```
-1. 查看每人应付金额
-2. 收款后勾选付款状态
-3. 使用筛选查看未付款成员
-```
+**Start New Poll**:
+1. Click "Poll Management"
+2. Click "Start New Poll"
+3. Confirm (current responses will be cleared)
+4. Enter new poll name
+5. Begin collecting responses
 
-**第4步: 活动结束后归档**
-```
-1. 点击 "Poll Management"
-2. 点击 "Save Current Poll to Archive"
-3. 输入名称: "2024 Year-End Dinner"
-4. 导出最终报告
-```
+**Manage Archives**:
+- **View**: See all archived polls with statistics
+- **Restore**: Bring back an archived poll as current
+- **Export**: Download archived poll data
+- **Delete**: Permanently remove an archive
 
-### 场景2: 管理多个投票活动
+## 🔐 Security Notes
 
-**保存当前投票**
-```
-1. Poll Management → Save Current Poll
-2. 命名: "November Monthly Dinner"
-```
+### Default Settings
+- **Default Password**: `iizukalab`
+- **Session Duration**: 24 hours
+- **Data Storage**: Browser localStorage
 
-**开始新投票**
-```
-1. Poll Management → Start New Poll
-2. 确认清除当前回复
-3. 开始收集新的投票
-```
+### Best Practices
+1. **Change Password Immediately** after first login
+2. **Use Strong Password** - Mix of letters, numbers, symbols
+3. **Don't Share Admin Link** - Only share poll link (index.html)
+4. **Regular Backups** - Export data regularly
+5. **Fixed Device** - Use same computer for admin tasks
 
-**查看历史投票**
-```
-1. Poll Management → View Archived Polls
-2. 查看所有已归档的投票
-3. 可以恢复、导出或删除
-```
+### Data Privacy
+- All data stored locally in browser
+- No server-side storage
+- Data persists until manually cleared
+- Regular exports recommended for backup
 
-### 场景3: 恢复历史投票数据
+## 📊 Data Management
 
-**从归档恢复**
-```
-1. Poll Management → View Archived Polls
-2. 找到需要的归档
-3. 点击 "Restore"
-4. 所有数据恢复为当前投票
-```
+### Storage
+- **Responses**: Stored in `poll_responses`
+- **Settings**: Stored in `admin_settings`
+- **Archives**: Stored in `poll_archives`
+- **Session**: Stored in `admin_session`
 
-**直接导出归档**
-```
-1. Poll Management → View Archived Polls
-2. 找到需要的归档
-3. 点击 "Export"
-4. 无需恢复即可导出数据
-```
+### Backup Strategy
+1. **Regular Exports** - Weekly XLSX exports
+2. **Archive Old Polls** - Save completed polls
+3. **Keep Archives** - Don't delete until certain
+4. **Multiple Formats** - Export CSV, XLSX, and PDF
 
-## 🎯 价格计算示例
+## 🎯 Use Cases
 
-**输入:**
-- 总费用: ¥10,000
-- 硕士生: 20%
-- 博士生: 30%
-- 教师: 50%
+### Monthly Lab Dinners
+1. Create poll with month/year title
+2. Collect attendance and dates
+3. Find most popular date from chart
+4. Set pricing based on attendee types
+5. Track payments
+6. Archive for records
 
-**参与人数:**
-- 4名硕士生
-- 3名博士生
-- 2名教师
+### Special Events
+- Year-end celebrations
+- Welcome/farewell parties
+- Professor retirement dinners
+- Lab anniversaries
 
-**自动计算结果:**
-- 硕士生: ¥10,000 × 20% ÷ 4 = ¥500/人
-- 博士生: ¥10,000 × 30% ÷ 3 = ¥1,000/人
-- 教师: ¥10,000 × 50% ÷ 2 = ¥2,500/人
+### Semester Activities
+- Start of semester gatherings
+- Mid-term celebrations
+- End of semester parties
 
-## 📊 数据存储
+## 🛠️ Technical Details
 
-所有数据存储在浏览器的 localStorage 中:
+### Technologies Used
+- **HTML5** - Semantic structure
+- **CSS3** - Modern styling with gradients and animations
+- **JavaScript (ES6)** - Core functionality
+- **Chart.js** - Data visualization
+- **SheetJS (XLSX)** - Excel export
+- **jsPDF** - PDF generation
+- **Font Awesome** - Icons
+- **localStorage API** - Data persistence
 
-### 数据结构
+### Browser Compatibility
+- ✅ Chrome/Edge (Recommended)
+- ✅ Firefox
+- ✅ Safari
+- ✅ Mobile browsers
 
-**poll_responses** - 投票回复
-```json
-[
-  {
-    "id": "1234567890",
-    "name": "张三",
-    "willAttend": "yes",
-    "title": "Doctoral Student",
-    "availableDates": ["2024-11-20", "2024-11-21"],
-    "paymentStatus": true,
-    "timestamp": "2024-11-17T10:30:00Z"
-  }
-]
+### Requirements
+- Modern web browser
+- JavaScript enabled
+- localStorage support
+- ~5MB storage space
+
+## ⚙️ Customization
+
+### Change Poll Duration
+Edit `generateDates()` in `poll.js`:
+```javascript
+for (let i = 0; i < 14; i++) {  // Change 14 to desired days
 ```
 
-**admin_settings** - 管理设置
-```json
-{
-  "password": "iizukalab",
-  "totalCost": 10000,
-  "masterPercent": 20,
-  "doctoralPercent": 30,
-  "staffPercent": 50,
-  "pollTitle": "Iizuka Lab November 2024 Group Dinner Poll",
-  "currentPollName": "Default Poll"
-}
+### Modify Title Options
+Edit HTML in `index.html` under "Title/Position" section.
+
+### Adjust Color Scheme
+Modify gradient colors in CSS files:
+```css
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 ```
 
-**poll_archives** - 投票归档 (新增!)
-```json
-[
-  {
-    "id": "1234567890",
-    "name": "November 2024 Dinner",
-    "date": "2024-11-17T10:00:00Z",
-    "responses": [...],
-    "settings": {...},
-    "statistics": {
-      "total": 15,
-      "attending": 12,
-      "notAttending": 3,
-      "paid": 10
-    }
-  }
-]
-```
+## 🐛 Troubleshooting
 
-**admin_session** - 会话管理
-```json
-{
-  "authenticated": true,
-  "timestamp": 1700220000000,
-  "expiresIn": 86400000
-}
-```
+### Login Issues
+- **Solution**: Clear browser cache, use correct password
+- **Reset**: Inspect → Console → `localStorage.setItem('admin_password', 'iizukalab')`
 
-## ⚠️ 重要提示
+### Chart Not Displaying
+- **Solution**: Ensure Chart.js CDN is loading
+- **Check**: Browser console for errors
 
-### 数据备份
-- **定期导出数据**: 使用XLSX或PDF导出功能保存备份
-- **归档重要投票**: 使用归档功能保存历史投票数据
-- **清除浏览器数据会丢失所有信息**
+### Data Not Saving
+- **Solution**: Check localStorage is enabled
+- **Fix**: Settings → Privacy → Allow site data
 
-### 多设备使用
-- 数据保存在本地浏览器
-- 固定用一台电脑进行管理
-- 不同设备的数据不同步
+### Export Not Working
+- **Solution**: Check XLSX/jsPDF libraries loaded
+- **Alternative**: Use CSV export
 
-### 安全建议
-- **立即修改默认密码**
-- 不要在公共电脑上保持登录
-- 定期更换管理员密码
+## 📝 Changelog
 
-### 归档管理建议
-- **重要投票及时归档**: 完成后立即保存
-- **命名规范**: 使用清晰的名称 (如: "2024-11 Monthly Dinner")
-- **定期清理**: 删除不再需要的旧归档
-- **导出备份**: 重要归档导出XLSX保存
+### Version 2.0 (Current)
+- ✅ Added poll archiving system
+- ✅ Implemented archive management (save/restore/export/delete)
+- ✅ Made date selection fully optional
+- ✅ Added current poll name display
+- ✅ Enhanced admin dashboard
 
-## 🛠️ 故障排除
+### Version 1.0
+- ✅ Basic poll functionality
+- ✅ Percentage-based pricing
+- ✅ Payment tracking
+- ✅ Data export features
 
-### 问题1: 登录后显示空白或错误
-**解决方案**: 清除浏览器缓存,刷新页面
+## 🎓 Credits
 
-### 问题2: 图表不显示
-**解决方案**: 确保有至少一个回复且选择了可用日期
+**Created for**: Iizuka Lab, The University of Tokyo  
+**Purpose**: Research group dinner organization  
+**License**: Free to use and modify
 
-### 问题3: 百分比无法保存
-**解决方案**: 确认三个百分比的总和正好是100%
+## 📞 Support
 
-### 问题4: 归档恢复后数据不对
-**解决方案**: 检查是否恢复了正确的归档,确认归档ID
-
-### 问题5: 数据丢失
-**解决方案**: 
-- 检查是否清除了浏览器数据
-- 查看归档列表,可能数据在归档中
-- 从导出的XLSX/PDF文件恢复
-
-## 📱 浏览器兼容性
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-## 🎨 设计特色
-
-- 现代化的渐变色设计
-- 响应式布局 (支持手机/平板/电脑)
-- 流畅的动画效果
-- 直观的用户界面
-- Font Awesome图标
-- Chart.js数据可视化
-
-## 📝 版本历史
-
-### v2.0 (当前版本)
-- ✨ 新增投票归档管理功能
-- ✨ 支持保存当前投票到归档
-- ✨ 支持开始新投票
-- ✨ 支持查看、恢复、导出和删除归档
-- ✨ 显示当前投票名称
-- 🐛 修复图表无限增长bug
-- 🐛 修复页面布局问题
-- 🎨 改进归档列表UI
-
-### v1.0
-- ✨ 投票收集功能
-- ✨ 百分比定价系统
-- ✨ 付款追踪功能
-- ✨ 标题自定义功能
-- ✨ 数据导出功能
-- ✨ 管理员认证
-
-## 👨‍💻 开发者信息
-
-专为东京大学 Iizuka Lab 研究组定制开发。
-
-## 📄 许可证
-
-MIT License
+For issues or questions:
+1. Check this README
+2. Review code comments
+3. Test in different browser
+4. Clear cache and retry
 
 ---
 
-**默认管理员密码**: `iizukalab`
+**Version**: 2.0  
+**Last Updated**: November 2024  
+**Status**: ✅ Production Ready
 
-**建议**: 首次登录后立即修改密码!
-
-祝使用愉快! 🎉
+Enjoy organizing your lab dinners! 🍜🎉

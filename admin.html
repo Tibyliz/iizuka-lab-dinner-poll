@@ -3,274 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Iizuka Lab Dinner Poll</title>
+    <title>Admin Dashboard - Iizuka Lab Poll</title>
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-chart-bar"></i> Admin Dashboard</h1>
-            <div class="header-actions">
-                <span id="current-poll-name" class="current-poll">Current: Default Poll</span>
-                <button id="logout-btn" class="btn btn-secondary">
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="header-left">
+                <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
+                <span class="poll-badge" id="currentPollBadge">Current Poll: Default</span>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" onclick="window.location.href='index.html'">
+                    <i class="fas fa-home"></i> Back to Poll
+                </button>
+                <button class="header-btn logout-btn" onclick="logout()">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
         </header>
 
-        <!-- Statistics Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-info">
-                    <div class="stat-label">Total Responses</div>
-                    <div class="stat-value" id="total-responses">0</div>
+        <div class="dashboard-content">
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalResponses">0</span>
+                        <span class="stat-label">Total Responses</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="attendingCount">0</span>
+                        <span class="stat-label">Attending</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="notAttendingCount">0</span>
+                        <span class="stat-label">Not Attending</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="paidCount">0</span>
+                        <span class="stat-label">Paid</span>
+                    </div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #10b981;"><i class="fas fa-user-check"></i></div>
-                <div class="stat-info">
-                    <div class="stat-label">Attending</div>
-                    <div class="stat-value" id="attending-count">0</div>
+
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <h3><i class="fas fa-chart-bar"></i> Most Popular Dates</h3>
+                <div class="chart-container">
+                    <canvas id="dateChart"></canvas>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #f59e0b;"><i class="fas fa-user-times"></i></div>
-                <div class="stat-info">
-                    <div class="stat-label">Not Attending</div>
-                    <div class="stat-value" id="not-attending-count">0</div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #3b82f6;"><i class="fas fa-money-bill-wave"></i></div>
-                <div class="stat-info">
-                    <div class="stat-label">Paid</div>
-                    <div class="stat-value" id="paid-count">0 / 0</div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Chart Section -->
-        <div class="chart-section">
-            <h2><i class="fas fa-chart-column"></i> Most Popular Dates</h2>
-            <div class="chart-container">
-                <canvas id="dateChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button id="poll-management-btn" class="btn btn-primary">
-                <i class="fas fa-archive"></i> Poll Management
-            </button>
-            <button id="price-settings-btn" class="btn btn-primary">
-                <i class="fas fa-dollar-sign"></i> Price Settings
-            </button>
-            <button id="title-settings-btn" class="btn btn-primary">
-                <i class="fas fa-heading"></i> Title Settings
-            </button>
-            <button id="settings-btn" class="btn btn-primary">
-                <i class="fas fa-cog"></i> Settings
-            </button>
-        </div>
-
-        <!-- Filter Section -->
-        <div class="filter-section">
-            <div class="filter-group">
-                <label>Attendance:</label>
-                <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="attending">Attending</button>
-                    <button class="filter-btn" data-filter="not-attending">Not Attending</button>
-                </div>
-            </div>
-            <div class="filter-group">
-                <label>Payment:</label>
-                <div class="filter-buttons">
-                    <button class="payment-filter-btn active" data-payment="all">All</button>
-                    <button class="payment-filter-btn" data-payment="paid">Paid</button>
-                    <button class="payment-filter-btn" data-payment="unpaid">Unpaid</button>
-                </div>
-            </div>
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="Search by name...">
-                <i class="fas fa-search"></i>
-            </div>
-        </div>
-
-        <!-- Export Buttons -->
-        <div class="export-buttons">
-            <button id="export-csv-btn" class="btn btn-success">
-                <i class="fas fa-file-csv"></i> Export CSV
-            </button>
-            <button id="export-xlsx-btn" class="btn btn-success">
-                <i class="fas fa-file-excel"></i> Export XLSX
-            </button>
-            <button id="export-pdf-btn" class="btn btn-success">
-                <i class="fas fa-file-pdf"></i> Export PDF
-            </button>
-        </div>
-
-        <!-- Responses Table -->
-        <div class="table-container">
-            <h2><i class="fas fa-list"></i> Responses</h2>
-            <table id="responses-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Attendance</th>
-                        <th>Title</th>
-                        <th>Available Dates</th>
-                        <th>Price</th>
-                        <th>Paid</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="responses-tbody">
-                    <tr>
-                        <td colspan="7" class="no-data">No responses yet</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Poll Management Modal -->
-    <div id="poll-management-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-archive"></i> Poll Management</h2>
-            
-            <div class="poll-actions">
-                <button id="save-poll-btn" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Save Current Poll to Archive
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn primary" onclick="openPriceSettings()">
+                    <i class="fas fa-dollar-sign"></i> Price Settings
                 </button>
-                <button id="new-poll-btn" class="btn btn-warning">
-                    <i class="fas fa-plus"></i> Start New Poll
+                <button class="action-btn secondary" onclick="openPollTitleSettings()">
+                    <i class="fas fa-heading"></i> Poll Title Settings
                 </button>
-                <button id="view-archives-btn" class="btn btn-info">
-                    <i class="fas fa-folder-open"></i> View Archived Polls
+                <button class="action-btn info" onclick="openPollManagement()">
+                    <i class="fas fa-archive"></i> Poll Management
+                </button>
+                <button class="action-btn success" onclick="exportXLSX()">
+                    <i class="fas fa-file-excel"></i> Export XLSX
+                </button>
+                <button class="action-btn danger" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+                <button class="action-btn dark" onclick="exportCSV()">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+                <button class="action-btn warning" onclick="openSettings()">
+                    <i class="fas fa-cog"></i> Settings
                 </button>
             </div>
-        </div>
-    </div>
 
-    <!-- Save Poll Modal -->
-    <div id="save-poll-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-save"></i> Save Current Poll</h2>
-            <div class="form-group">
-                <label for="poll-name-input">Poll Name:</label>
-                <input type="text" id="poll-name-input" placeholder="e.g., November 2024 Dinner" class="form-control">
-            </div>
-            <div class="modal-buttons">
-                <button id="confirm-save-poll" class="btn btn-primary">
-                    <i class="fas fa-check"></i> Save
+            <!-- Filter Buttons -->
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterResponses('all')">
+                    <i class="fas fa-list"></i> All
                 </button>
-                <button class="btn btn-secondary cancel-btn">
-                    <i class="fas fa-times"></i> Cancel
+                <button class="filter-btn" onclick="filterResponses('attending')">
+                    <i class="fas fa-check"></i> Attending
                 </button>
+                <button class="filter-btn" onclick="filterResponses('not-attending')">
+                    <i class="fas fa-times"></i> Not Attending
+                </button>
+                <button class="filter-btn" onclick="filterResponses('paid')">
+                    <i class="fas fa-dollar-sign"></i> Paid
+                </button>
+                <button class="filter-btn" onclick="filterResponses('unpaid')">
+                    <i class="fas fa-exclamation-circle"></i> Unpaid
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name..." onkeyup="searchResponses()">
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Archives List Modal -->
-    <div id="archives-modal" class="modal">
-        <div class="modal-content large-modal">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-folder-open"></i> Archived Polls</h2>
-            <div id="archives-list" class="archives-list">
-                <!-- Archives will be dynamically inserted here -->
+            <!-- Responses Table -->
+            <div class="table-container">
+                <table id="responsesTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Attendance</th>
+                            <th>Title</th>
+                            <th>Available Dates</th>
+                            <th>Price</th>
+                            <th>Paid</th>
+                            <th>Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody id="responsesTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                                No responses yet
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <!-- Price Settings Modal -->
-    <div id="price-modal" class="modal">
+    <div id="priceModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-dollar-sign"></i> Price Settings</h2>
-            <div class="form-group">
-                <label for="total-cost">Total Cost (¥):</label>
-                <input type="number" id="total-cost" placeholder="10000" class="form-control">
+            <div class="modal-header">
+                <h3><i class="fas fa-dollar-sign"></i> Price Settings</h3>
+                <button class="close-btn" onclick="closeModal('priceModal')">&times;</button>
             </div>
-            <div class="form-group">
-                <label for="master-percent">Master Student Percentage (%):</label>
-                <input type="number" id="master-percent" placeholder="20" min="0" max="100" class="form-control">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Total Cost</label>
+                    <input type="number" id="totalCost" placeholder="Enter total cost">
+                </div>
+                
+                <div class="form-group">
+                    <label>Master Student Percentage (%)</label>
+                    <input type="number" id="masterPercent" placeholder="e.g., 20" min="0" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Doctoral Student Percentage (%)</label>
+                    <input type="number" id="doctoralPercent" placeholder="e.g., 30" min="0" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Teachers and Staff Percentage (%)</label>
+                    <input type="number" id="staffPercent" placeholder="e.g., 50" min="0" max="100">
+                </div>
+                
+                <div class="percentage-total" id="percentageTotal">
+                    Total: <span id="totalPercentage">0</span>% <span id="percentageStatus"></span>
+                </div>
+                
+                <div class="price-preview" id="pricePreview" style="display: none;">
+                    <h4>Price Preview</h4>
+                    <div id="pricePreviewContent"></div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="doctoral-percent">Doctoral Student Percentage (%):</label>
-                <input type="number" id="doctoral-percent" placeholder="30" min="0" max="100" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="staff-percent">Teachers and Staff Percentage (%):</label>
-                <input type="number" id="staff-percent" placeholder="50" min="0" max="100" class="form-control">
-            </div>
-            <div id="percent-total" class="percent-total">Total: 0%</div>
-            <div id="price-preview" class="price-preview"></div>
-            <div class="modal-buttons">
-                <button id="save-prices" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Save Settings
-                </button>
-                <button class="btn btn-secondary cancel-btn">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('priceModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="savePriceSettings()">Save Settings</button>
             </div>
         </div>
     </div>
 
-    <!-- Title Settings Modal -->
-    <div id="title-modal" class="modal">
+    <!-- Poll Title Settings Modal -->
+    <div id="titleModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-heading"></i> Poll Title Settings</h2>
-            <div class="form-group">
-                <label for="poll-title-input">Poll Title:</label>
-                <input type="text" id="poll-title-input" class="form-control">
+            <div class="modal-header">
+                <h3><i class="fas fa-heading"></i> Poll Title Settings</h3>
+                <button class="close-btn" onclick="closeModal('titleModal')">&times;</button>
             </div>
-            <div class="modal-buttons">
-                <button id="save-title" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Save Title
-                </button>
-                <button id="reset-title" class="btn btn-warning">
-                    <i class="fas fa-undo"></i> Reset to Default
-                </button>
-                <button class="btn btn-secondary cancel-btn">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Poll Title</label>
+                    <input type="text" id="pollTitle" placeholder="Enter poll title">
+                    <small>Current default: "Iizuka Lab [Month] [Year] Group Dinner Poll"</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="resetTitleToDefault()">Reset to Default</button>
+                <button class="btn btn-primary" onclick="savePollTitle()">Save Title</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Poll Management Modal -->
+    <div id="pollManagementModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3><i class="fas fa-archive"></i> Poll Management</h3>
+                <button class="close-btn" onclick="closeModal('pollManagementModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="poll-management-actions">
+                    <button class="btn btn-success" onclick="saveCurrentPoll()">
+                        <i class="fas fa-save"></i> Save Current Poll to Archive
+                    </button>
+                    <button class="btn btn-warning" onclick="startNewPoll()">
+                        <i class="fas fa-plus-circle"></i> Start New Poll
+                    </button>
+                </div>
+                
+                <h4 style="margin-top: 30px;"><i class="fas fa-folder-open"></i> Archived Polls</h4>
+                <div id="archivedPollsList" class="archived-polls-list">
+                    <!-- Archived polls will be listed here -->
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Settings Modal -->
-    <div id="settings-modal" class="modal">
+    <div id="settingsModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2><i class="fas fa-cog"></i> Admin Settings</h2>
-            <div class="form-group">
-                <label for="current-password">Current Password:</label>
-                <input type="password" id="current-password" class="form-control">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> Settings</h3>
+                <button class="close-btn" onclick="closeModal('settingsModal')">&times;</button>
             </div>
-            <div class="form-group">
-                <label for="new-password">New Password:</label>
-                <input type="password" id="new-password" class="form-control">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Change Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="confirm-password">Confirm New Password:</label>
-                <input type="password" id="confirm-password" class="form-control">
-            </div>
-            <div class="modal-buttons">
-                <button id="change-password" class="btn btn-primary">
-                    <i class="fas fa-key"></i> Change Password
-                </button>
-                <button class="btn btn-secondary cancel-btn">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="changePassword()">Change Password</button>
             </div>
         </div>
     </div>

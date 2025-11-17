@@ -1,335 +1,223 @@
-# 🚀 快速开始指南
+# 🚀 Quick Start Guide
 
-5分钟快速上手Iizuka Lab聚餐投票系统!
+Get your Iizuka Lab Dinner Poll system up and running in 10 minutes!
 
-## 📦 文件清单
+## 📦 Step 1: Deploy (2 minutes)
 
-确保你有以下文件:
+### Option A: GitHub Pages
+1. Create new GitHub repository
+2. Upload all files (maintain folder structure)
+3. Settings → Pages → Source: main branch
+4. Get your URL: `https://username.github.io/repo-name/`
 
+### Option B: Web Server
+1. Upload all files to your web server
+2. Maintain folder structure:
+   ```
+   /
+   ├── index.html
+   ├── admin-login.html
+   ├── admin.html
+   ├── css/
+   └── js/
+   ```
+3. Access via your domain
+
+## 🔐 Step 2: Initial Setup (3 minutes)
+
+### First Login
+1. Open `admin-login.html`
+2. Enter default password: **`iizukalab`**
+3. Click Login
+
+### Change Password (Important!)
+1. Click **"Settings"** button
+2. Enter new password
+3. Click **"Change Password"**
+4. Remember your new password!
+
+## 🎯 Step 3: Configure Poll (3 minutes)
+
+### Set Poll Title
+1. Click **"Poll Title Settings"**
+2. Options:
+   - Keep default: "Iizuka Lab November 2024 Group Dinner Poll"
+   - Or enter custom title
+3. Click **"Save Title"**
+
+### Configure Pricing
+1. Click **"Price Settings"**
+2. Enter **Total Cost** (e.g., 10000)
+3. Set percentages:
+   - Master Students: 20%
+   - Doctoral Students: 30%
+   - Teachers and Staff: 50%
+   - (Must total 100%)
+4. Review preview
+5. Click **"Save Settings"**
+
+## 📢 Step 4: Share with Group (2 minutes)
+
+### Share Poll Link
+**Give this link to participants:**
 ```
-✅ index.html              # 投票表单
-✅ admin-login.html        # 管理员登录
-✅ admin.html              # 管理仪表板
-✅ css/style.css          # 表单样式
-✅ css/admin.css          # 管理页面样式
-✅ js/poll.js             # 投票逻辑
-✅ js/login.js            # 登录逻辑
-✅ js/admin.js            # 管理功能
-```
-
-## 🎯 第一次使用
-
-### 步骤1: 打开网站 (1分钟)
-```
-用浏览器打开 index.html
-```
-
-### 步骤2: 管理员登录 (2分钟)
-```
-1. 滚动到页面底部
-2. 点击灰色的 "Admin" 链接
-3. 输入密码: iizukalab
-4. 点击 Login
-```
-
-### 步骤3: 修改密码 (2分钟)
-```
-1. 登录后点击 "Settings"
-2. 输入当前密码: iizukalab
-3. 输入新密码 (至少6位)
-4. 确认新密码
-5. 点击 "Change Password"
-```
-
-✅ **完成!** 你已经可以开始使用了!
-
----
-
-## ⚙️ 基础配置
-
-### 配置1: 设置投票标题 (1分钟)
-```
-1. 点击 "Title Settings"
-2. 输入标题,例如:
-   "Iizuka Lab November 2024 Group Dinner Poll"
-3. 或点击 "Reset to Default" 使用智能默认标题
-4. 点击 "Save Title"
-```
-
-### 配置2: 设置价格 (2分钟)
-```
-1. 点击 "Price Settings"
-2. 输入总费用: 10000
-3. 设置百分比:
-   - 硕士生: 20%
-   - 博士生: 30%
-   - 教师职工: 50%
-4. 查看实时预览
-5. 确认总和 = 100%
-6. 点击 "Save Settings"
+https://your-domain.com/index.html
 ```
 
----
+**Do NOT share:**
+- admin-login.html (admin only!)
+- admin.html (admin only!)
 
-## 📝 收集回复
+### What Participants See
+1. Poll form with:
+   - Name field
+   - Yes/No attendance
+   - Title selection
+   - Optional date selection
+2. Submit button
+3. Success confirmation
 
-### 分享给参与者
-```
-1. 分享 index.html 的链接给实验室成员
-2. 或将文件发送给他们
-```
+## 📊 Step 5: Manage Responses
 
-### 参与者填写流程
-```
-1. 打开链接
-2. 填写姓名
-3. 选择是否参加
-4. 选择职称 (硕士/博士/教师)
-5. 如果参加,选择可用日期
-6. 点击提交
-```
+### View Dashboard
+- **Statistics Cards**: See totals at a glance
+- **Chart**: Most popular dates visualization
+- **Table**: All responses with details
 
-### 查看回复
-```
-1. 登录管理页面
-2. 实时看到所有回复
-3. 查看图表显示最受欢迎的日期
-```
+### Track Payments
+1. Find person in table
+2. Check the "Paid" checkbox
+3. Status saved automatically
 
----
+### Filter & Search
+- Click filter buttons (All/Attending/Not Attending/Paid/Unpaid)
+- Use search box to find by name
 
-## 💰 追踪付款
+### Export Data
+- **CSV**: Simple format
+- **XLSX**: Excel with statistics
+- **PDF**: Professional report
 
-### 步骤1: 查看每人应付金额
-```
-表格中的 "Price" 列显示每人需要支付的金额
-```
+## 📁 Step 6: Poll Management
 
-### 步骤2: 标记付款状态
-```
-1. 收到款后,勾选该人的付款复选框
-2. 自动显示绿色的 ✓ 图标
-3. 顶部统计显示 "已付款/总参加人数"
-```
+### Save Current Poll
+1. Click **"Poll Management"**
+2. Click **"Save Current Poll to Archive"**
+3. Enter name (e.g., "November 2024 Dinner")
+4. Poll saved to archive
 
-### 步骤3: 查看未付款成员
-```
-1. 点击 "Unpaid" 筛选按钮
-2. 只显示未付款的成员
-3. 方便提醒收款
-```
+### Start New Poll
+1. Click **"Poll Management"**
+2. Click **"Start New Poll"**
+3. Confirm action
+4. Enter new poll name
+5. Begin collecting responses
 
----
+### Manage Archives
+- **View**: See all archived polls
+- **Restore**: Bring back archived poll
+- **Export**: Download archive data
+- **Delete**: Remove archive
 
-## 🗂️ 管理投票归档
+## ⚡ Quick Tips
 
-### 保存当前投票
-```
-1. 活动结束后点击 "Poll Management"
-2. 点击 "Save Current Poll to Archive"
-3. 输入名称: "November 2024 Dinner"
-4. 点击 Save
-```
+### For Best Results
+1. ✅ Change default password immediately
+2. ✅ Test with dummy data first
+3. ✅ Export data regularly
+4. ✅ Use same device for admin
+5. ✅ Clear cache if issues occur
 
-### 开始新投票
-```
-1. 点击 "Poll Management"
-2. 点击 "Start New Poll"
-3. 确认操作 (会清除所有回复)
-4. 当前回复被清空,设置保持不变
-```
+### Common Tasks
 
-### 查看归档
-```
-1. 点击 "Poll Management"
-2. 点击 "View Archived Polls"
-3. 看到所有历史投票
-4. 可以恢复、导出或删除
-```
+**Find Most Popular Date:**
+- Check the chart in admin dashboard
+- Highest bar = most popular
 
----
+**Calculate Total Cost:**
+- Count attending people by title
+- Apply percentages
+- System does this automatically!
 
-## 📤 导出数据
+**Track Who Hasn't Paid:**
+- Click "Unpaid" filter button
+- See list of unpaid attendees
 
-### 导出当前投票
-```
-点击以下任一按钮:
-- "Export CSV" - 简单表格
-- "Export XLSX" - Excel文件 (推荐)
-- "Export PDF" - PDF报告
-```
+**Export for Records:**
+- Use XLSX export
+- Includes all data + statistics
+- Keep for your records
 
-### 导出归档投票
-```
-1. Poll Management → View Archived Polls
-2. 找到要导出的归档
-3. 点击 "Export" 按钮
-4. 自动下载XLSX文件
-```
+## 🎯 Example Workflow
 
----
+### Monthly Lab Dinner
 
-## 🎓 完整使用流程
+**Week 1: Setup**
+1. Login and configure pricing
+2. Share poll link with lab members
+3. Set deadline (e.g., 1 week)
 
-### 场景: 组织一次聚餐
+**Week 2: Collect**
+1. Monitor responses in dashboard
+2. Send reminders if needed
+3. Close poll at deadline
 
-#### 第1步: 准备 (5分钟)
-```
-✅ 登录管理页面
-✅ 修改默认密码
-✅ 设置投票标题
-✅ 设置价格和百分比
-```
+**Week 3: Organize**
+1. Check most popular date
+2. Confirm attendance count
+3. Calculate per-person costs
+4. Share results with group
 
-#### 第2步: 收集 (2-3天)
-```
-✅ 分享链接给实验室成员
-✅ 等待大家提交回复
-✅ 实时查看回复情况
-```
+**Week 4: Payment**
+1. Collect money from attendees
+2. Check payment boxes in admin
+3. Track who has paid
+4. Export final report
 
-#### 第3步: 决定 (10分钟)
-```
-✅ 查看图表选择最合适的日期
-✅ 通知大家确定的日期
-✅ 查看每人的应付金额
-```
+**After Event:**
+1. Save poll to archive
+2. Export records
+3. Start new poll for next time
 
-#### 第4步: 收款 (1-2周)
-```
-✅ 向参与者收款
-✅ 收到款后勾选付款状态
-✅ 使用筛选查看未付款成员
-```
+## 🆘 Quick Troubleshooting
 
-#### 第5步: 归档 (2分钟)
-```
-✅ 活动结束后保存投票
-✅ 导出最终报告
-✅ 可以开始新投票了!
-```
+### Can't Login?
+- Use password: `iizukalab` (default)
+- Clear browser cache
+- Try incognito/private mode
 
----
+### Chart Not Showing?
+- Wait for page to fully load
+- Refresh page (Ctrl+F5)
+- Check browser console for errors
 
-## 💡 常用技巧
+### Export Not Working?
+- Try different format (CSV instead of XLSX)
+- Check browser allows downloads
+- Try different browser
 
-### 技巧1: 快速筛选
-```
-使用组合筛选快速找到特定人群:
-- "Attending" + "Unpaid" = 需要收款的人
-- "Attending" + "Paid" = 已付款的人
-```
+### Lost Data?
+- Check if on same device
+- Data stored in browser localStorage
+- Different browsers = different data
 
-### 技巧2: 搜索功能
-```
-在搜索框输入姓名快速定位某个人
-```
+## 🎉 You're Ready!
 
-### 技巧3: 实时预览
-```
-在设置价格时,会实时显示每类人员的单价
-```
+Your poll system is now configured and ready to use!
 
-### 技巧4: 归档命名
-```
-使用清晰的命名:
-✅ "2024-11 Monthly Dinner"
-✅ "Year-End Celebration 2024"
-❌ "test"
-❌ "poll1"
-```
+**Next Steps:**
+1. Test with dummy submission
+2. Share link with your group
+3. Monitor responses
+4. Export data when done
+
+**For More Help:**
+- Read full [README.md](README.md)
+- Check code comments
+- Test features one by one
 
 ---
 
-## ⚠️ 重要提示
+**Happy Polling!** 🍜✨
 
-### 数据安全
-```
-⚠️ 数据存储在浏览器localStorage
-⚠️ 清除浏览器数据会丢失所有信息
-✅ 定期导出XLSX备份
-✅ 重要投票保存到归档
-```
-
-### 密码安全
-```
-⚠️ 默认密码: iizukalab
-✅ 首次登录立即修改
-✅ 定期更换密码
-✅ 不在公共电脑上使用
-```
-
-### 多设备使用
-```
-⚠️ 数据不在设备间同步
-✅ 固定用一台电脑管理
-✅ 或每次导出后在新设备导入
-```
-
-### 开始新投票
-```
-⚠️ 会清除所有当前回复
-✅ 先保存到归档
-✅ 导出XLSX报告
-✅ 然后再开始新投票
-```
-
----
-
-## 🆘 遇到问题?
-
-### 问题1: 无法登录
-```
-解决方案:
-1. 确认密码正确: iizukalab (默认)
-2. 清除浏览器缓存
-3. 重新打开页面
-```
-
-### 问题2: 看不到数据
-```
-解决方案:
-1. 确认是否有提交回复
-2. 清除筛选条件
-3. 刷新页面
-```
-
-### 问题3: 百分比无法保存
-```
-解决方案:
-确认三个百分比总和正好是 100%
-```
-
-### 问题4: 图表不显示
-```
-解决方案:
-1. 确认至少有一个"参加"的回复
-2. 确认回复中选择了可用日期
-3. 刷新页面
-```
-
----
-
-## 📚 更多资源
-
-- **完整文档**: 查看 README.md
-- **归档管理指南**: 查看 ARCHIVE_MANAGEMENT_GUIDE.md
-- **常见问题**: 查看 README.md 的故障排除部分
-
----
-
-## 🎉 准备就绪!
-
-现在你已经掌握了基础使用方法,可以开始组织你们实验室的聚餐活动了!
-
-**记住三个关键点:**
-1. ✅ 首次登录修改密码
-2. ✅ 定期导出数据备份
-3. ✅ 重要投票保存到归档
-
-祝使用愉快! 🍜🥘
-
----
-
-**默认密码**: `iizukalab`  
-**建议**: 立即修改!
+If you encounter any issues, refer to the troubleshooting section in README.md.

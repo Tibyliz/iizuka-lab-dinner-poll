@@ -1,113 +1,76 @@
-// Admin login JavaScript
+// Admin Login JavaScript
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Login page loaded');
-    
-    // Initialize default password if not exists
-    initializePassword();
-    
-    // Setup form submission
-    const form = document.getElementById('login-form');
-    if (form) {
-        form.addEventListener('submit', handleLogin);
+// Initialize default password on first load
+window.addEventListener('DOMContentLoaded', () => {
+    // Set default password if not exists
+    if (!localStorage.getItem('admin_password')) {
+        localStorage.setItem('admin_password', 'iizukalab');
     }
     
-    // Toggle password visibility
-    const togglePassword = document.getElementById('toggle-password');
-    if (togglePassword) {
-        togglePassword.addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.classList.remove('fa-eye');
-                this.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                this.classList.remove('fa-eye-slash');
-                this.classList.add('fa-eye');
-            }
-        });
-    }
+    // Check if already logged in
+    checkSession();
 });
 
-// Initialize default password
-function initializePassword() {
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    
-    if (!settings.password) {
-        settings.password = 'iizukalab';
-        localStorage.setItem('admin_settings', JSON.stringify(settings));
-        console.log('Default password initialized');
+// Check if user is already logged in
+function checkSession() {
+    const session = localStorage.getItem('admin_session');
+    if (session) {
+        const sessionData = JSON.parse(session);
+        const now = Date.now();
+        
+        // Check if session is still valid (24 hours)
+        if (now - sessionData.timestamp < 24 * 60 * 60 * 1000) {
+            window.location.href = 'admin.html';
+        } else {
+            // Session expired
+            localStorage.removeItem('admin_session');
+        }
     }
 }
 
-// Handle login
-function handleLogin(e) {
+// Handle login form submission
+document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     
-    const passwordInput = document.getElementById('password');
-    const password = passwordInput?.value;
-    
-    if (!password) {
-        showError('Please enter a password');
-        return;
-    }
-    
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    const storedPassword = settings.password || 'iizukalab';
-    
-    console.log('Login attempt');
+    const password = document.getElementById('password').value;
+    const storedPassword = localStorage.getItem('admin_password');
     
     if (password === storedPassword) {
-        console.log('Password correct');
-        
         // Create session
         const session = {
             authenticated: true,
-            timestamp: Date.now(),
-            expiresIn: 24 * 60 * 60 * 1000 // 24 hours
+            timestamp: Date.now()
         };
         
         localStorage.setItem('admin_session', JSON.stringify(session));
-        console.log('Session created');
         
-        // Show success message
-        showSuccess();
-        
-        // Redirect after short delay
-        setTimeout(() => {
-            console.log('Redirecting to admin.html');
-            window.location.href = 'admin.html';
-        }, 1000);
+        // Redirect to admin page
+        window.location.href = 'admin.html';
     } else {
-        console.log('Password incorrect');
-        showError('Incorrect password. Please try again.');
-    }
-}
-
-// Show error message
-function showError(message) {
-    const errorMessage = document.getElementById('error-message');
-    const errorText = document.getElementById('error-text');
-    const successMessage = document.getElementById('success-message');
-    
-    if (errorText) errorText.textContent = message;
-    if (errorMessage) {
+        // Show error message
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.textContent = 'Incorrect password. Please try again.';
         errorMessage.style.display = 'block';
-        successMessage.style.display = 'none';
+        
+        // Hide error after 3 seconds
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 3000);
     }
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-        if (errorMessage) errorMessage.style.display = 'none';
-    }, 3000);
-}
+});
 
-// Show success message
-function showSuccess() {
-    const errorMessage = document.getElementById('error-message');
-    const successMessage = document.getElementById('success-message');
+// Toggle password visibility
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.querySelector('.toggle-password i');
     
-    if (errorMessage) errorMessage.style.display = 'none';
-    if (successMessage) successMessage.style.display = 'block';
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleBtn.classList.remove('fa-eye');
+        toggleBtn.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleBtn.classList.remove('fa-eye-slash');
+        toggleBtn.classList.add('fa-eye');
+    }
 }

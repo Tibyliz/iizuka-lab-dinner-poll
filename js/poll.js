@@ -1,182 +1,146 @@
-// Poll form JavaScript
+// Poll Form JavaScript
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Poll page loaded');
-    
-    // Load poll title
+// Load poll title on page load
+window.addEventListener('DOMContentLoaded', () => {
     loadPollTitle();
-    
-    // Generate date options
     generateDates();
-    
-    // Setup event listeners
     setupEventListeners();
 });
 
-// Load poll title from settings
+// Load poll title
 function loadPollTitle() {
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    const title = settings.pollTitle || getDefaultTitle();
-    
-    // Update page title
-    const pageTitle = document.getElementById('page-title');
-    if (pageTitle) {
-        pageTitle.textContent = title;
-    }
-    
-    // Update h1 title
-    const pollTitle = document.getElementById('poll-title');
-    if (pollTitle) {
-        pollTitle.textContent = title;
-    }
+    const title = localStorage.getItem('poll_title') || getDefaultTitle();
+    document.getElementById('pollTitle').textContent = title;
+    document.title = title;
 }
 
-// Get default title
+// Get default title with current month and year
 function getDefaultTitle() {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
     const now = new Date();
-    const month = now.toLocaleString('en-US', { month: 'long' });
+    const month = months[now.getMonth()];
     const year = now.getFullYear();
     return `Iizuka Lab ${month} ${year} Group Dinner Poll`;
 }
 
-// Generate next 14 days as date options
+// Generate next 14 days
 function generateDates() {
-    const container = document.getElementById('dates-container');
-    if (!container) return;
-    
+    const datesGrid = document.getElementById('datesGrid');
     const today = new Date();
-    const dates = [];
     
     for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         
-        const dateStr = date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric',
-            weekday: 'short'
-        });
+        const dateStr = formatDate(date);
+        const dayName = getDayName(date);
         
-        const value = date.toISOString().split('T')[0];
+        const label = document.createElement('label');
+        label.className = 'date-checkbox';
+        label.innerHTML = `
+            <input type="checkbox" name="dates" value="${dateStr}">
+            <div class="date-card">
+                <div>${dayName}</div>
+                <div style="font-size: 0.9rem; margin-top: 5px;">${dateStr}</div>
+            </div>
+        `;
         
-        dates.push({ dateStr, value });
+        datesGrid.appendChild(label);
     }
-    
-    container.innerHTML = dates.map(({ dateStr, value }) => `
-        <label class="date-option">
-            <input type="checkbox" name="dates" value="${value}">
-            <span>${dateStr}</span>
-        </label>
-    `).join('');
+}
+
+// Format date as YYYY-MM-DD
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// Get day name
+function getDayName(date) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return days[date.getDay()];
 }
 
 // Setup event listeners
 function setupEventListeners() {
-    // Show/hide dates section based on attendance
-    const attendanceInputs = document.querySelectorAll('input[name="willAttend"]');
-    attendanceInputs.forEach(input => {
-        input.addEventListener('change', handleAttendanceChange);
+    // Show/hide dates based on attendance
+    const willAttendRadios = document.getElementsByName('willAttend');
+    willAttendRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            const datesGroup = document.getElementById('datesGroup');
+            if (radio.value === 'yes') {
+                datesGroup.style.display = 'block';
+            } else {
+                datesGroup.style.display = 'none';
+                // Uncheck all dates
+                document.querySelectorAll('input[name="dates"]').forEach(cb => cb.checked = false);
+            }
+        });
     });
     
     // Form submission
-    const form = document.getElementById('poll-form');
-    if (form) {
-        form.addEventListener('submit', handleSubmit);
-    }
-    
-    // Toggle password visibility (if on login page)
-    const togglePassword = document.getElementById('toggle-password');
-    if (togglePassword) {
-        togglePassword.addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.classList.remove('fa-eye');
-                this.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                this.classList.remove('fa-eye-slash');
-                this.classList.add('fa-eye');
-            }
-        });
-    }
-}
-
-// Handle attendance change
-function handleAttendanceChange(e) {
-    const datesSection = document.getElementById('dates-section');
-    if (!datesSection) return;
-    
-    if (e.target.value === 'yes') {
-        datesSection.style.display = 'block';
-        // Make at least one date required
-        const dateInputs = document.querySelectorAll('input[name="dates"]');
-        dateInputs.forEach(input => input.required = true);
-    } else {
-        datesSection.style.display = 'none';
-        // Remove date requirement
-        const dateInputs = document.querySelectorAll('input[name="dates"]');
-        dateInputs.forEach(input => {
-            input.required = false;
-            input.checked = false;
-        });
-    }
+    document.getElementById('pollForm').addEventListener('submit', handleSubmit);
 }
 
 // Handle form submission
 function handleSubmit(e) {
     e.preventDefault();
     
+    // Get form data
     const formData = new FormData(e.target);
     const name = formData.get('name');
     const willAttend = formData.get('willAttend');
     const title = formData.get('title');
     const dates = formData.getAll('dates');
     
-    // Validate
-    if (!name || !willAttend || !title) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    if (willAttend === 'yes' && dates.length === 0) {
-        alert('Please select at least one available date');
-        return;
-    }
-    
     // Create response object
     const response = {
         id: Date.now().toString(),
-        name: name.trim(),
+        name: name,
         willAttend: willAttend,
         title: title,
         availableDates: dates,
         paymentStatus: false,
-        timestamp: new Date().toISOString()
+        submittedAt: new Date().toISOString()
     };
     
-    // Save to localStorage
+    // Get existing responses
     const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    
+    // Add new response
     responses.push(response);
+    
+    // Save to localStorage
     localStorage.setItem('poll_responses', JSON.stringify(responses));
     
     // Show success message
-    const form = document.getElementById('poll-form');
-    const successMessage = document.getElementById('success-message');
+    document.getElementById('pollForm').style.display = 'none';
+    document.getElementById('successMessage').style.display = 'block';
     
-    if (form) form.style.display = 'none';
-    if (successMessage) successMessage.style.display = 'block';
-    
-    // Reset form after 3 seconds
+    // Reset form and hide success message after 3 seconds
     setTimeout(() => {
-        if (form) {
-            form.reset();
-            form.style.display = 'block';
-        }
-        if (successMessage) successMessage.style.display = 'none';
-        
-        // Hide dates section
-        const datesSection = document.getElementById('dates-section');
-        if (datesSection) datesSection.style.display = 'none';
+        e.target.reset();
+        document.getElementById('datesGroup').style.display = 'none';
+        document.getElementById('pollForm').style.display = 'block';
+        document.getElementById('successMessage').style.display = 'none';
     }, 3000);
+}
+
+// Toggle password visibility (for login page)
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.querySelector('.toggle-password i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleBtn.classList.remove('fa-eye');
+        toggleBtn.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleBtn.classList.remove('fa-eye-slash');
+        toggleBtn.classList.add('fa-eye');
+    }
 }
