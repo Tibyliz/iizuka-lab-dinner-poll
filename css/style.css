@@ -114,15 +114,8 @@ input[type="password"]:focus {
 }
 
 .radio-custom {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 15px 20px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    background: white;
+    margin-right: 10px;
+    font-size: 18px;
 }
 
 .radio-custom i {
