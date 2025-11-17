@@ -40,17 +40,17 @@ function generateDates() {
         label.className = 'date-checkbox';
         label.innerHTML = `
             <input type="checkbox" name="dates" value="${dateStr}">
-            <div class="date-card">
+            <span class="date-custom">
                 <div class="date-day">${dayName}</div>
                 <div class="date-date">${dateStr}</div>
-            </div>
+            </span>
         `;
         
         datesGrid.appendChild(label);
     }
 }
 
-// Format date as YYYY-MM-DD
+// Format date as MM-DD
 function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
