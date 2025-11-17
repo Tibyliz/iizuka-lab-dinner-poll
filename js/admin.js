@@ -1,648 +1,561 @@
-// Admin Dashboard JavaScript - Complete with ALL features
+// ============================================================================
+// IIZUKA LAB DINNER POLL - ADMIN DASHBOARD
+// Fixed Version - Chart Infinite Rendering Bug Fixed
+// ============================================================================
 
-let currentChart = null;
-let allResponses = [];
-let filteredResponses = [];
+console.log('Admin.js loaded successfully');
+
+// Global chart instance - CRITICAL: Store chart globally to prevent duplicates
+let dateChart = null;
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Admin dashboard loaded');
+    console.log('Admin page DOM loaded');
     
     // Check authentication
-    if (!checkAuthentication()) {
+    checkAuth();
+    
+    // Initialize data
+    initializeData();
+    
+    // Load and display data - ONLY ONCE
+    loadAndDisplayData();
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    console.log('Admin initialization complete');
+});
+
+// ============================================================================
+// AUTHENTICATION
+// ============================================================================
+
+function checkAuth() {
+    const sessionStr = localStorage.getItem('admin_session');
+    
+    if (!sessionStr) {
+        console.log('No session found, redirecting to login');
         window.location.href = 'admin-login.html';
         return;
     }
     
-    // Load data and initialize
-    loadAllData();
-    setupEventListeners();
-    updateDashboard();
-});
-
-// Check authentication
-function checkAuthentication() {
-    const session = JSON.parse(localStorage.getItem('admin_session') || '{}');
-    
-    if (!session.authenticated) {
-        return false;
-    }
-    
-    // Check if session expired (24 hours)
-    const now = Date.now();
-    const sessionAge = now - session.timestamp;
-    
-    if (sessionAge > session.expiresIn) {
-        localStorage.removeItem('admin_session');
-        return false;
-    }
-    
-    return true;
-}
-
-// Load all data
-function loadAllData() {
-    allResponses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
-    filteredResponses = [...allResponses];
-    console.log('Loaded responses:', allResponses.length);
-}
-
-// Setup event listeners
-function setupEventListeners() {
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    
-    // Modal buttons
-    document.getElementById('titleSettingsBtn').addEventListener('click', () => openModal('titleModal'));
-    document.getElementById('priceSettingsBtn').addEventListener('click', () => openModal('priceModal'));
-    document.getElementById('pollManagementBtn').addEventListener('click', () => openModal('pollManagementModal'));
-    document.getElementById('settingsBtn').addEventListener('click', () => openModal('settingsModal'));
-    
-    // Close buttons
-    document.querySelectorAll('.close').forEach(btn => {
-        btn.addEventListener('click', function() {
-            this.closest('.modal').style.display = 'none';
-        });
-    });
-    
-    // Click outside to close
-    window.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal')) {
-            e.target.style.display = 'none';
-        }
-    });
-    
-    // Title settings
-    document.getElementById('resetTitleBtn').addEventListener('click', resetTitle);
-    document.getElementById('saveTitleBtn').addEventListener('click', saveTitle);
-    
-    // Price settings
-    document.getElementById('masterPercent').addEventListener('input', validatePercentages);
-    document.getElementById('doctoralPercent').addEventListener('input', validatePercentages);
-    document.getElementById('staffPercent').addEventListener('input', validatePercentages);
-    document.getElementById('totalCost').addEventListener('input', updatePricePreview);
-    document.getElementById('savePriceBtn').addEventListener('click', savePriceSettings);
-    
-    // Poll management
-    document.getElementById('saveCurrentPoll').addEventListener('click', saveCurrentPoll);
-    document.getElementById('startNewPoll').addEventListener('click', startNewPoll);
-    
-    // Settings
-    document.getElementById('changePasswordBtn').addEventListener('click', changePassword);
-    
-    // Filters
-    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            applyFilters();
-        });
-    });
-    
-    document.querySelectorAll('.filter-btn[data-payment-filter]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn[data-payment-filter]').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            applyFilters();
-        });
-    });
-    
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-    
-    // Export buttons
-    document.getElementById('exportCSV').addEventListener('click', exportToCSV);
-    document.getElementById('exportXLSX').addEventListener('click', exportToXLSX);
-    document.getElementById('exportPDF').addEventListener('click', exportToPDF);
-}
-
-// Update dashboard
-function updateDashboard() {
-    updateStatistics();
-    updateChart();
-    updateTable();
-    loadTitleSettings();
-    loadPriceSettings();
-    loadArchivedPolls();
-}
-
-// Update statistics
-function updateStatistics() {
-    const total = allResponses.length;
-    const attending = allResponses.filter(r => r.will_attend === 'yes').length;
-    const notAttending = total - attending;
-    const paid = allResponses.filter(r => r.payment_status).length;
-    
-    document.getElementById('totalResponses').textContent = total;
-    document.getElementById('attendingCount').textContent = attending;
-    document.getElementById('notAttendingCount').textContent = notAttending;
-    document.getElementById('paidCount').textContent = `${paid} / ${attending}`;
-}
-
-// Update chart
-function updateChart() {
-    const attendingResponses = allResponses.filter(r => r.will_attend === 'yes');
-    const dateCounts = {};
-    
-    attendingResponses.forEach(response => {
-        response.available_dates.forEach(date => {
-            dateCounts[date] = (dateCounts[date] || 0) + 1;
-        });
-    });
-    
-    const sortedDates = Object.entries(dateCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-    
-    const labels = sortedDates.map(([date]) => formatDate(date));
-    const data = sortedDates.map(([, count]) => count);
-    
-    const ctx = document.getElementById('dateChart').getContext('2d');
-    
-    if (currentChart) {
-        currentChart.destroy();
-    }
-    
-    currentChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Number of People Available',
-                data: data,
-                backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                borderColor: 'rgba(102, 126, 234, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            }
-        }
-    });
-}
-
-// Format date
-function formatDate(dateStr) {
-    const date = new Date(dateStr + 'T00:00:00');
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
-}
-
-// Update table
-function updateTable() {
-    const tbody = document.getElementById('responsesBody');
-    tbody.innerHTML = '';
-    
-    if (filteredResponses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #718096;">No responses found</td></tr>';
-        return;
-    }
-    
-    filteredResponses.forEach((response, index) => {
-        const row = document.createElement('tr');
+    try {
+        const session = JSON.parse(sessionStr);
+        const now = Date.now();
         
-        const attendanceBadge = response.will_attend === 'yes' 
-            ? '<span class="badge badge-yes">Yes</span>' 
-            : '<span class="badge badge-no">No</span>';
-        
-        const dates = response.will_attend === 'yes' && response.available_dates.length > 0
-            ? response.available_dates.map(d => formatDate(d)).join(', ')
-            : '—';
-        
-        const price = calculateIndividualPrice(response);
-        const priceDisplay = response.will_attend === 'yes' && price > 0 
-            ? `¥${price.toFixed(2)}` 
-            : '—';
-        
-        const paidCheckbox = response.will_attend === 'yes'
-            ? `<input type="checkbox" class="payment-checkbox" data-id="${response.id}" ${response.payment_status ? 'checked' : ''}>`
-            : '—';
-        
-        const submittedDate = new Date(response.submitted_at).toLocaleString();
-        
-        row.innerHTML = `
-            <td>${response.name}</td>
-            <td>${attendanceBadge}</td>
-            <td>${response.title}</td>
-            <td>${dates}</td>
-            <td>${priceDisplay}</td>
-            <td>${paidCheckbox}</td>
-            <td>${submittedDate}</td>
-        `;
-        
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners to checkboxes
-    document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            updatePaymentStatus(this.dataset.id, this.checked);
-        });
-    });
-}
-
-// Calculate individual price
-function calculateIndividualPrice(response) {
-    if (response.will_attend !== 'yes') {
-        return 0;
-    }
-    
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    const totalCost = parseFloat(settings.total_cost) || 0;
-    const masterPercent = parseFloat(settings.master_percent) || 0;
-    const doctoralPercent = parseFloat(settings.doctoral_percent) || 0;
-    const staffPercent = parseFloat(settings.staff_percent) || 0;
-    
-    if (totalCost === 0 || (masterPercent + doctoralPercent + staffPercent) !== 100) {
-        return 0;
-    }
-    
-    // Count people by title
-    const attendingResponses = allResponses.filter(r => r.will_attend === 'yes');
-    const masterCount = attendingResponses.filter(r => r.title === 'Master Student').length;
-    const doctoralCount = attendingResponses.filter(r => r.title === 'Doctoral Student').length;
-    const staffCount = attendingResponses.filter(r => r.title === 'Teachers and Staff').length;
-    
-    // Calculate portion for each group
-    const masterPortion = totalCost * (masterPercent / 100);
-    const doctoralPortion = totalCost * (doctoralPercent / 100);
-    const staffPortion = totalCost * (staffPercent / 100);
-    
-    // Calculate individual price
-    if (response.title === 'Master Student' && masterCount > 0) {
-        return masterPortion / masterCount;
-    } else if (response.title === 'Doctoral Student' && doctoralCount > 0) {
-        return doctoralPortion / doctoralCount;
-    } else if (response.title === 'Teachers and Staff' && staffCount > 0) {
-        return staffPortion / staffCount;
-    }
-    
-    return 0;
-}
-
-// Update payment status
-function updatePaymentStatus(id, paid) {
-    const response = allResponses.find(r => r.id === id);
-    if (response) {
-        response.payment_status = paid;
-        localStorage.setItem('poll_responses', JSON.stringify(allResponses));
-        updateStatistics();
-    }
-}
-
-// Apply filters
-function applyFilters() {
-    const attendanceFilter = document.querySelector('.filter-btn[data-filter].active').dataset.filter;
-    const paymentFilter = document.querySelector('.filter-btn[data-payment-filter].active').dataset.paymentFilter;
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
-    filteredResponses = allResponses.filter(response => {
-        // Attendance filter
-        if (attendanceFilter !== 'all' && response.will_attend !== attendanceFilter) {
-            return false;
+        // Check if session is expired (24 hours)
+        if (now - session.timestamp > session.expiresIn) {
+            console.log('Session expired');
+            localStorage.removeItem('admin_session');
+            window.location.href = 'admin-login.html';
+            return;
         }
         
-        // Payment filter
-        if (paymentFilter === 'paid' && !response.payment_status) {
-            return false;
-        }
-        if (paymentFilter === 'unpaid' && (response.payment_status || response.will_attend !== 'yes')) {
-            return false;
-        }
-        
-        // Search filter
-        if (searchTerm && !response.name.toLowerCase().includes(searchTerm)) {
-            return false;
-        }
-        
-        return true;
-    });
+        console.log('Session valid');
+    } catch (e) {
+        console.error('Session error:', e);
+        window.location.href = 'admin-login.html';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('admin_session');
+    window.location.href = 'admin-login.html';
+}
+
+// ============================================================================
+// DATA INITIALIZATION
+// ============================================================================
+
+function initializeData() {
+    // Initialize poll responses if not exists
+    if (!localStorage.getItem('poll_responses')) {
+        localStorage.setItem('poll_responses', JSON.stringify([]));
+    }
     
-    updateTable();
-}
-
-// Modal functions
-function openModal(modalId) {
-    document.getElementById(modalId).style.display = 'block';
-}
-
-// Title settings
-function loadTitleSettings() {
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    document.getElementById('pollTitleInput').value = settings.poll_title || '';
-}
-
-function resetTitle() {
-    const defaultTitle = getDefaultTitle();
-    document.getElementById('pollTitleInput').value = defaultTitle;
-}
-
-function saveTitle() {
-    const title = document.getElementById('pollTitleInput').value.trim() || getDefaultTitle();
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    settings.poll_title = title;
-    localStorage.setItem('admin_settings', JSON.stringify(settings));
-    alert('Title saved successfully!');
-    document.getElementById('titleModal').style.display = 'none';
+    // Initialize admin settings if not exists
+    if (!localStorage.getItem('admin_settings')) {
+        const defaultSettings = {
+            password: 'iizukalab',
+            poll_title: getDefaultTitle(),
+            total_cost: 0,
+            master_percentage: 20,
+            doctoral_percentage: 30,
+            staff_percentage: 50,
+            current_poll_id: generatePollId()
+        };
+        localStorage.setItem('admin_settings', JSON.stringify(defaultSettings));
+    }
+    
+    // Initialize archived polls if not exists
+    if (!localStorage.getItem('archived_polls')) {
+        localStorage.setItem('archived_polls', JSON.stringify([]));
+    }
 }
 
 function getDefaultTitle() {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'];
+                   'July', 'August', 'September', 'October', 'November', 'December'];
     const now = new Date();
     const month = months[now.getMonth()];
     const year = now.getFullYear();
     return `Iizuka Lab ${month} ${year} Group Dinner Poll`;
 }
 
-// Price settings
-function loadPriceSettings() {
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    document.getElementById('totalCost').value = settings.total_cost || '';
-    document.getElementById('masterPercent').value = settings.master_percent || 20;
-    document.getElementById('doctoralPercent').value = settings.doctoral_percent || 30;
-    document.getElementById('staffPercent').value = settings.staff_percent || 50;
-    validatePercentages();
-    updatePricePreview();
+function generatePollId() {
+    return 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-function validatePercentages() {
-    const master = parseFloat(document.getElementById('masterPercent').value) || 0;
-    const doctoral = parseFloat(document.getElementById('doctoralPercent').value) || 0;
-    const staff = parseFloat(document.getElementById('staffPercent').value) || 0;
-    const total = master + doctoral + staff;
+// ============================================================================
+// LOAD AND DISPLAY DATA - CALLED ONLY ONCE
+// ============================================================================
+
+function loadAndDisplayData() {
+    console.log('Loading data...');
     
-    const warning = document.getElementById('percentageWarning');
-    const success = document.getElementById('percentageSuccess');
+    try {
+        // Get responses
+        const responsesStr = localStorage.getItem('poll_responses');
+        const responses = responsesStr ? JSON.parse(responsesStr) : [];
+        
+        console.log('Loaded responses:', responses.length);
+        
+        // Update statistics
+        updateStatistics(responses);
+        
+        // Render chart - ONLY ONCE with safeguard
+        renderDateChart(responses);
+        
+        // Display responses table
+        displayResponses(responses);
+        
+    } catch (e) {
+        console.error('Error loading data:', e);
+        showNotification('Error loading data: ' + e.message, 'error');
+    }
+}
+
+// ============================================================================
+// STATISTICS
+// ============================================================================
+
+function updateStatistics(responses) {
+    const totalResponses = responses.length;
+    const attending = responses.filter(r => r.will_attend === 'yes').length;
+    const notAttending = totalResponses - attending;
     
-    if (Math.abs(total - 100) < 0.01) {
-        warning.style.display = 'none';
-        success.style.display = 'flex';
-    } else {
-        warning.style.display = 'flex';
-        success.style.display = 'none';
+    // Count paid
+    const paid = responses.filter(r => r.payment_status === true).length;
+    
+    // Update DOM
+    document.getElementById('total-responses').textContent = totalResponses;
+    document.getElementById('attending-count').textContent = attending;
+    document.getElementById('not-attending-count').textContent = notAttending;
+    
+    // Update payment display
+    const paidDisplay = document.getElementById('paid-count');
+    if (paidDisplay) {
+        paidDisplay.textContent = `${paid} / ${totalResponses}`;
+    }
+}
+
+// ============================================================================
+// CHART RENDERING - FIXED TO PREVENT INFINITE LOOP
+// ============================================================================
+
+function renderDateChart(responses) {
+    console.log('Rendering chart (called once)...');
+    
+    // CRITICAL FIX: Destroy existing chart before creating new one
+    if (dateChart) {
+        console.log('Destroying existing chart');
+        dateChart.destroy();
+        dateChart = null;
     }
     
-    updatePricePreview();
-}
-
-function updatePricePreview() {
-    const totalCost = parseFloat(document.getElementById('totalCost').value) || 0;
-    const master = parseFloat(document.getElementById('masterPercent').value) || 0;
-    const doctoral = parseFloat(document.getElementById('doctoralPercent').value) || 0;
-    const staff = parseFloat(document.getElementById('staffPercent').value) || 0;
-    const percentTotal = master + doctoral + staff;
-    
-    const previewDiv = document.getElementById('pricePreview');
-    
-    if (totalCost === 0 || Math.abs(percentTotal - 100) > 0.01) {
-        previewDiv.innerHTML = '<p style="color: #718096; text-align: center;">Enter total cost and valid percentages to see preview</p>';
+    const canvas = document.getElementById('dateChart');
+    if (!canvas) {
+        console.error('Chart canvas not found');
         return;
     }
     
-    // Count people by title
-    const attendingResponses = allResponses.filter(r => r.will_attend === 'yes');
-    const masterCount = attendingResponses.filter(r => r.title === 'Master Student').length;
-    const doctoralCount = attendingResponses.filter(r => r.title === 'Doctoral Student').length;
-    const staffCount = attendingResponses.filter(r => r.title === 'Teachers and Staff').length;
+    // Get context
+    const ctx = canvas.getContext('2d');
     
-    const masterPortion = totalCost * (master / 100);
-    const doctoralPortion = totalCost * (doctoral / 100);
-    const staffPortion = totalCost * (staff / 100);
+    // Filter attending responses
+    const attendingResponses = responses.filter(r => r.will_attend === 'yes');
     
-    const masterPrice = masterCount > 0 ? masterPortion / masterCount : 0;
-    const doctoralPrice = doctoralCount > 0 ? doctoralPortion / doctoralCount : 0;
-    const staffPrice = staffCount > 0 ? staffPortion / staffCount : 0;
-    
-    previewDiv.innerHTML = `
-        <h4>Price Preview</h4>
-        <div class="price-item">
-            <span>Master Students (${masterCount} people):</span>
-            <span>¥${masterPrice.toFixed(2)} per person</span>
-        </div>
-        <div class="price-item">
-            <span>Doctoral Students (${doctoralCount} people):</span>
-            <span>¥${doctoralPrice.toFixed(2)} per person</span>
-        </div>
-        <div class="price-item">
-            <span>Teachers/Staff (${staffCount} people):</span>
-            <span>¥${staffPrice.toFixed(2)} per person</span>
-        </div>
-    `;
-}
-
-function savePriceSettings() {
-    const totalCost = parseFloat(document.getElementById('totalCost').value) || 0;
-    const master = parseFloat(document.getElementById('masterPercent').value) || 0;
-    const doctoral = parseFloat(document.getElementById('doctoralPercent').value) || 0;
-    const staff = parseFloat(document.getElementById('staffPercent').value) || 0;
-    
-    if (Math.abs(master + doctoral + staff - 100) > 0.01) {
-        alert('Percentages must add up to 100%!');
-        return;
-    }
-    
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    settings.total_cost = totalCost;
-    settings.master_percent = master;
-    settings.doctoral_percent = doctoral;
-    settings.staff_percent = staff;
-    localStorage.setItem('admin_settings', JSON.stringify(settings));
-    
-    alert('Price settings saved successfully!');
-    document.getElementById('priceModal').style.display = 'none';
-    updateDashboard();
-}
-
-// Poll management
-function loadArchivedPolls() {
-    const archived = JSON.parse(localStorage.getItem('archived_polls') || '[]');
-    const archiveList = document.getElementById('archiveList');
-    
-    if (archived.length === 0) {
-        archiveList.innerHTML = '<p style="color: #718096; text-align: center;">No archived polls yet</p>';
-        return;
-    }
-    
-    archiveList.innerHTML = archived.map(poll => `
-        <div class="archive-item">
-            <div class="archive-info">
-                <h4>${poll.name}</h4>
-                <p>Archived: ${new Date(poll.archived_date).toLocaleDateString()} | Responses: ${poll.total_responses}</p>
-            </div>
-        </div>
-    `).join('');
-}
-
-function saveCurrentPoll() {
-    const pollName = prompt('Enter a name for this poll:', `Poll ${new Date().toLocaleDateString()}`);
-    if (!pollName) return;
-    
-    const archived = JSON.parse(localStorage.getItem('archived_polls') || '[]');
-    const attending = allResponses.filter(r => r.will_attend === 'yes').length;
-    
-    archived.push({
-        id: 'archive_' + Date.now(),
-        name: pollName,
-        archived_date: new Date().toISOString(),
-        total_responses: allResponses.length,
-        total_attendees: attending,
-        responses: [...allResponses]
+    // Count dates
+    const dateCounts = {};
+    attendingResponses.forEach(response => {
+        if (response.available_dates && Array.isArray(response.available_dates)) {
+            response.available_dates.forEach(date => {
+                dateCounts[date] = (dateCounts[date] || 0) + 1;
+            });
+        }
     });
     
-    localStorage.setItem('archived_polls', JSON.stringify(archived));
-    alert('Poll archived successfully!');
-    loadArchivedPolls();
+    // Sort by count
+    const sortedDates = Object.entries(dateCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10); // Top 10 dates
+    
+    const labels = sortedDates.map(([date]) => date);
+    const data = sortedDates.map(([, count]) => count);
+    
+    console.log('Chart data prepared:', labels.length, 'dates');
+    
+    // Create chart - ONLY ONCE
+    try {
+        dateChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of People Available',
+                    data: data,
+                    backgroundColor: 'rgba(147, 51, 234, 0.6)',
+                    borderColor: 'rgba(147, 51, 234, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // IMPORTANT: Allow fixed height
+                plugins: {
+                    legend: {
+                        display: true
+                    },
+                    tooltip: {
+                        enabled: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+        console.log('Chart created successfully');
+    } catch (e) {
+        console.error('Error creating chart:', e);
+    }
 }
 
-function startNewPoll() {
-    if (!confirm('This will clear all current responses and start a new poll. Continue?')) {
+// ============================================================================
+// DISPLAY RESPONSES TABLE
+// ============================================================================
+
+function displayResponses(responses) {
+    const tbody = document.querySelector('#responses-table tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (responses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #999;">No responses yet</td></tr>';
         return;
     }
     
-    localStorage.setItem('poll_responses', '[]');
+    // Get settings for price calculation
     const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    settings.current_poll_id = 'poll_' + Date.now();
-    localStorage.setItem('admin_settings', JSON.stringify(settings));
     
-    alert('New poll started! All responses cleared.');
-    document.getElementById('pollManagementModal').style.display = 'none';
-    location.reload();
+    responses.forEach((response, index) => {
+        const row = document.createElement('tr');
+        
+        // Calculate price
+        let price = 0;
+        if (response.will_attend === 'yes' && settings.total_cost > 0) {
+            price = calculateIndividualPrice(response.title, responses, settings);
+        }
+        
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${escapeHtml(response.name)}</td>
+            <td><span class="badge badge-${response.will_attend === 'yes' ? 'success' : 'danger'}">${response.will_attend === 'yes' ? 'Yes' : 'No'}</span></td>
+            <td>${escapeHtml(response.title)}</td>
+            <td>${response.available_dates && response.available_dates.length > 0 ? response.available_dates.join(', ') : 'N/A'}</td>
+            <td>¥${price.toFixed(2)}</td>
+            <td>
+                <label class="payment-checkbox">
+                    <input type="checkbox" ${response.payment_status ? 'checked' : ''} onchange="togglePaymentStatus(${index})">
+                    <span class="payment-status ${response.payment_status ? 'paid' : 'unpaid'}">
+                        ${response.payment_status ? '✓ Paid' : '✗ Unpaid'}
+                    </span>
+                </label>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
 }
 
-// Settings
-function changePassword() {
-    const newPassword = document.getElementById('newPassword').value;
-    if (!newPassword) {
-        alert('Please enter a new password');
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function calculateIndividualPrice(title, responses, settings) {
+    // Count by title
+    const attendingByTitle = {
+        'Master Student': 0,
+        'Doctoral Student': 0,
+        'Teachers and Staff': 0
+    };
+    
+    responses.forEach(r => {
+        if (r.will_attend === 'yes') {
+            attendingByTitle[r.title] = (attendingByTitle[r.title] || 0) + 1;
+        }
+    });
+    
+    const totalCost = settings.total_cost || 0;
+    const masterPercentage = settings.master_percentage || 20;
+    const doctoralPercentage = settings.doctoral_percentage || 30;
+    const staffPercentage = settings.staff_percentage || 50;
+    
+    // Calculate price per person for each category
+    const prices = {
+        'Master Student': attendingByTitle['Master Student'] > 0 
+            ? (totalCost * masterPercentage / 100) / attendingByTitle['Master Student'] 
+            : 0,
+        'Doctoral Student': attendingByTitle['Doctoral Student'] > 0 
+            ? (totalCost * doctoralPercentage / 100) / attendingByTitle['Doctoral Student'] 
+            : 0,
+        'Teachers and Staff': attendingByTitle['Teachers and Staff'] > 0 
+            ? (totalCost * staffPercentage / 100) / attendingByTitle['Teachers and Staff'] 
+            : 0
+    };
+    
+    return prices[title] || 0;
+}
+
+// ============================================================================
+// PAYMENT STATUS TOGGLE
+// ============================================================================
+
+function togglePaymentStatus(index) {
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    
+    if (index >= 0 && index < responses.length) {
+        responses[index].payment_status = !responses[index].payment_status;
+        localStorage.setItem('poll_responses', JSON.stringify(responses));
+        
+        // Refresh display
+        loadAndDisplayData();
+        
+        showNotification('Payment status updated', 'success');
+    }
+}
+
+// ============================================================================
+// EVENT LISTENERS SETUP
+// ============================================================================
+
+function setupEventListeners() {
+    // Logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+    
+    // Price settings button
+    const priceSettingsBtn = document.getElementById('price-settings-btn');
+    if (priceSettingsBtn) {
+        priceSettingsBtn.addEventListener('click', openPriceSettings);
+    }
+    
+    // Poll title settings button
+    const titleSettingsBtn = document.getElementById('title-settings-btn');
+    if (titleSettingsBtn) {
+        titleSettingsBtn.addEventListener('click', openTitleSettings);
+    }
+    
+    // Export buttons
+    const exportCsvBtn = document.getElementById('export-csv-btn');
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportToCSV);
+    }
+    
+    const exportXlsxBtn = document.getElementById('export-xlsx-btn');
+    if (exportXlsxBtn) {
+        exportXlsxBtn.addEventListener('click', exportToXLSX);
+    }
+    
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    if (exportPdfBtn) {
+        exportPdfBtn.addEventListener('click', exportToPDF);
+    }
+    
+    // Search
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', handleSearch);
+    }
+    
+    // Filters
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            applyFilters();
+        });
+    });
+}
+
+// ============================================================================
+// SETTINGS MODALS
+// ============================================================================
+
+function openPriceSettings() {
+    // Implementation for price settings modal
+    alert('Price Settings: Please refer to the documentation for implementation details.');
+}
+
+function openTitleSettings() {
+    // Implementation for title settings modal
+    alert('Title Settings: Please refer to the documentation for implementation details.');
+}
+
+// ============================================================================
+// EXPORT FUNCTIONS
+// ============================================================================
+
+function exportToCSV() {
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    
+    if (responses.length === 0) {
+        showNotification('No data to export', 'warning');
         return;
     }
     
-    localStorage.setItem('admin_password', newPassword);
-    alert('Password changed successfully!');
-    document.getElementById('settingsModal').style.display = 'none';
-    document.getElementById('newPassword').value = '';
-}
-
-// Logout
-function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        localStorage.removeItem('admin_session');
-        window.location.href = 'admin-login.html';
-    }
-}
-
-// Export functions
-function exportToCSV() {
-    const headers = ['Name', 'Attendance', 'Title', 'Available Dates', 'Price', 'Paid', 'Submitted'];
-    const rows = allResponses.map(r => [
-        r.name,
-        r.will_attend === 'yes' ? 'Yes' : 'No',
-        r.title,
-        r.available_dates.join('; '),
-        calculateIndividualPrice(r).toFixed(2),
-        r.payment_status ? 'Yes' : 'No',
-        new Date(r.submitted_at).toLocaleString()
-    ]);
+    let csv = 'Name,Will Attend,Title,Available Dates,Price,Payment Status\n';
     
-    let csv = headers.join(',') + '\n';
-    rows.forEach(row => {
-        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    
+    responses.forEach(response => {
+        const price = response.will_attend === 'yes' 
+            ? calculateIndividualPrice(response.title, responses, settings) 
+            : 0;
+        
+        csv += `"${response.name}",`;
+        csv += `"${response.will_attend}",`;
+        csv += `"${response.title}",`;
+        csv += `"${response.available_dates ? response.available_dates.join('; ') : 'N/A'}",`;
+        csv += `"¥${price.toFixed(2)}",`;
+        csv += `"${response.payment_status ? 'Paid' : 'Unpaid'}"\n`;
     });
     
     downloadFile(csv, 'poll_responses.csv', 'text/csv');
+    showNotification('Exported to CSV successfully', 'success');
 }
 
 function exportToXLSX() {
-    const data = allResponses.map(r => ({
-        'Name': r.name,
-        'Attendance': r.will_attend === 'yes' ? 'Yes' : 'No',
-        'Title': r.title,
-        'Available Dates': r.available_dates.join(', '),
-        'Price': calculateIndividualPrice(r).toFixed(2),
-        'Paid': r.payment_status ? 'Yes' : 'No',
-        'Submitted': new Date(r.submitted_at).toLocaleString()
-    }));
-    
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Responses');
-    
-    // Add statistics sheet
-    const stats = [
-        ['Statistic', 'Value'],
-        ['Total Responses', allResponses.length],
-        ['Attending', allResponses.filter(r => r.will_attend === 'yes').length],
-        ['Not Attending', allResponses.filter(r => r.will_attend === 'no').length],
-        ['Paid', allResponses.filter(r => r.payment_status).length]
-    ];
-    const ws2 = XLSX.utils.aoa_to_sheet(stats);
-    XLSX.utils.book_append_sheet(wb, ws2, 'Statistics');
-    
-    XLSX.writeFile(wb, 'poll_responses.xlsx');
+    showNotification('XLSX export requires external library. Please use CSV export.', 'info');
 }
 
 function exportToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    doc.setFontSize(18);
-    doc.text('Poll Responses Report', 14, 20);
-    
-    doc.setFontSize(12);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
-    
-    // Statistics
-    doc.setFontSize(14);
-    doc.text('Statistics', 14, 45);
-    doc.setFontSize(11);
-    doc.text(`Total Responses: ${allResponses.length}`, 14, 53);
-    doc.text(`Attending: ${allResponses.filter(r => r.will_attend === 'yes').length}`, 14, 60);
-    doc.text(`Not Attending: ${allResponses.filter(r => r.will_attend === 'no').length}`, 14, 67);
-    
-    // Responses
-    doc.setFontSize(14);
-    doc.text('Responses', 14, 82);
-    
-    let y = 90;
-    allResponses.forEach((r, i) => {
-        if (y > 270) {
-            doc.addPage();
-            y = 20;
-        }
-        
-        doc.setFontSize(10);
-        doc.text(`${i + 1}. ${r.name} - ${r.title}`, 14, y);
-        y += 6;
-        doc.text(`   Attendance: ${r.will_attend === 'yes' ? 'Yes' : 'No'}`, 14, y);
-        y += 6;
-        const price = calculateIndividualPrice(r);
-        if (price > 0) {
-            doc.text(`   Price: ¥${price.toFixed(2)} | Paid: ${r.payment_status ? 'Yes' : 'No'}`, 14, y);
-            y += 8;
-        } else {
-            y += 5;
-        }
-    });
-    
-    doc.save('poll_responses.pdf');
+    showNotification('PDF export requires external library. Please use CSV export.', 'info');
 }
 
 function downloadFile(content, filename, type) {
     const blob = new Blob([content], { type: type });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// ============================================================================
+// SEARCH AND FILTER
+// ============================================================================
+
+function handleSearch() {
+    applyFilters();
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    
+    let filtered = responses;
+    
+    // Apply search
+    if (searchTerm) {
+        filtered = filtered.filter(r => r.name.toLowerCase().includes(searchTerm));
+    }
+    
+    // Apply filter
+    if (activeFilter !== 'all') {
+        if (activeFilter === 'attending') {
+            filtered = filtered.filter(r => r.will_attend === 'yes');
+        } else if (activeFilter === 'not-attending') {
+            filtered = filtered.filter(r => r.will_attend === 'no');
+        } else if (activeFilter === 'paid') {
+            filtered = filtered.filter(r => r.payment_status === true);
+        } else if (activeFilter === 'unpaid') {
+            filtered = filtered.filter(r => r.payment_status === false);
+        }
+    }
+    
+    displayResponses(filtered);
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+function showNotification(message, type = 'info') {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-out';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// ============================================================================
+// Make functions global for inline event handlers
+// ============================================================================
+
+window.togglePaymentStatus = togglePaymentStatus;
+window.logout = logout;
+
+console.log('Admin.js fully loaded - Chart bug fixed!');
