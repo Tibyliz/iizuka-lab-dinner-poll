@@ -1,279 +1,191 @@
-// Poll.js - Poll Submission with localStorage (GitHub Pages Compatible)
-// Handles poll form submission and data storage
+// Poll Form JavaScript with localStorage
 
-// Load poll title from settings
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Poll page loaded');
+    
+    // Load and set poll title
+    loadPollTitle();
+    
+    // Generate date options
+    generateDateOptions();
+    
+    // Set up event listeners
+    setupEventListeners();
+});
+
+// Load poll title from localStorage
 function loadPollTitle() {
-    try {
-        const settingsStr = localStorage.getItem('admin_settings');
-        if (settingsStr) {
-            const settings = JSON.parse(settingsStr);
-            const title = settings.poll_title || getDefaultPollTitle();
-            
-            // Update page title and heading
-            document.title = title;
-            const heading = document.getElementById('poll-title');
-            if (heading) {
-                heading.textContent = title;
-            }
-        } else {
-            // Use default title
-            const defaultTitle = getDefaultPollTitle();
-            document.title = defaultTitle;
-            const heading = document.getElementById('poll-title');
-            if (heading) {
-                heading.textContent = defaultTitle;
-            }
-        }
-    } catch (error) {
-        console.error('Error loading poll title:', error);
-    }
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    let title = settings.poll_title || getDefaultTitle();
+    
+    // Update page title and heading
+    document.getElementById('page-title').textContent = title;
+    document.getElementById('poll-title').textContent = title;
+    
+    console.log('Poll title loaded:', title);
 }
 
-function getDefaultPollTitle() {
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+// Get default title with current month and year
+function getDefaultTitle() {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                    'July', 'August', 'September', 'October', 'November', 'December'];
     const now = new Date();
     const month = months[now.getMonth()];
     const year = now.getFullYear();
     return `Iizuka Lab ${month} ${year} Group Dinner Poll`;
 }
 
-// Generate dates for selection
+// Generate next 14 days as date options
 function generateDateOptions() {
-    const datesContainer = document.getElementById('dates-container');
-    if (!datesContainer) return;
-    
-    const dates = [];
+    const dateOptionsContainer = document.getElementById('dateOptions');
     const today = new Date();
     
-    // Generate next 14 days
     for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateStr = `${month}/${day}`;
+        const dateStr = formatDate(date);
+        const dateValue = date.toISOString().split('T')[0];
         
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const dayName = dayNames[date.getDay()];
+        const dateOption = document.createElement('label');
+        dateOption.className = 'date-option';
+        dateOption.innerHTML = `
+            <input type="checkbox" name="dates" value="${dateValue}">
+            <span class="date-label">
+                <i class="fas fa-calendar-day"></i>
+                ${dateStr}
+            </span>
+        `;
         
-        dates.push({ dateStr, dayName });
+        dateOptionsContainer.appendChild(dateOption);
     }
     
-    datesContainer.innerHTML = dates.map(({ dateStr, dayName }) => `
-        <label class="date-option">
-            <input type="checkbox" name="dates" value="${dateStr}">
-            <span>${dateStr} (${dayName})</span>
-        </label>
-    `).join('');
+    console.log('Generated 14 date options');
 }
 
-// Handle attendance selection change
-function handleAttendanceChange() {
-    const attendance = document.querySelector('input[name="attendance"]:checked');
-    const titleGroup = document.getElementById('title-group');
-    const datesGroup = document.getElementById('dates-group');
+// Format date as "Mon, Nov 17"
+function formatDate(date) {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    if (attendance) {
-        // Title is always visible
-        titleGroup.style.display = 'block';
-        
-        if (attendance.value === 'yes') {
-            datesGroup.style.display = 'block';
-        } else {
-            datesGroup.style.display = 'none';
-        }
-    }
+    const dayName = days[date.getDay()];
+    const monthName = months[date.getMonth()];
+    const dayNum = date.getDate();
+    
+    return `${dayName}, ${monthName} ${dayNum}`;
+}
+
+// Set up event listeners
+function setupEventListeners() {
+    // Show/hide date selection based on attendance
+    const attendanceRadios = document.querySelectorAll('input[name="attendance"]');
+    attendanceRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const dateGroup = document.getElementById('dateGroup');
+            if (this.value === 'yes') {
+                dateGroup.style.display = 'block';
+                // Make date selection required
+                const dateCheckboxes = document.querySelectorAll('input[name="dates"]');
+                dateCheckboxes.forEach(cb => cb.required = true);
+            } else {
+                dateGroup.style.display = 'none';
+                // Remove required from dates
+                const dateCheckboxes = document.querySelectorAll('input[name="dates"]');
+                dateCheckboxes.forEach(cb => {
+                    cb.required = false;
+                    cb.checked = false;
+                });
+            }
+        });
+    });
+    
+    // Form submission
+    const form = document.getElementById('pollForm');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleFormSubmission();
+    });
 }
 
 // Handle form submission
-function handleSubmit(event) {
-    event.preventDefault();
+function handleFormSubmission() {
+    console.log('Form submitted');
     
-    const form = event.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
+    // Get form data
+    const name = document.getElementById('name').value.trim();
+    const attendance = document.querySelector('input[name="attendance"]:checked').value;
+    const title = document.querySelector('input[name="title"]:checked').value;
     
-    // Disable submit button
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
+    // Get selected dates
+    const selectedDates = [];
+    const dateCheckboxes = document.querySelectorAll('input[name="dates"]:checked');
+    dateCheckboxes.forEach(checkbox => {
+        selectedDates.push(checkbox.value);
+    });
     
-    try {
-        // Get form data
-        const name = document.getElementById('name').value.trim();
-        const attendance = document.querySelector('input[name="attendance"]:checked');
-        const title = document.querySelector('input[name="title"]:checked');
-        
-        // Validation
-        if (!name) {
-            alert('Please enter your name');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit';
-            return;
-        }
-        
-        if (!attendance) {
-            alert('Please select whether you will attend');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit';
-            return;
-        }
-        
-        if (!title) {
-            alert('Please select your title');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit';
-            return;
-        }
-        
-        const willAttend = attendance.value;
-        const titleValue = title.value;
-        
-        // Get selected dates if attending
-        let selectedDates = [];
-        if (willAttend === 'yes') {
-            const dateCheckboxes = document.querySelectorAll('input[name="dates"]:checked');
-            selectedDates = Array.from(dateCheckboxes).map(cb => cb.value);
-            
-            if (selectedDates.length === 0) {
-                alert('Please select at least one available date');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit';
-                return;
-            }
-        }
-        
-        // Get current poll ID from settings
-        let currentPollId = 'default_poll';
-        const settingsStr = localStorage.getItem('admin_settings');
-        if (settingsStr) {
-            const settings = JSON.parse(settingsStr);
-            currentPollId = settings.current_poll_id || currentPollId;
-        }
-        
-        // Create response object
-        const response = {
-            id: generateId(),
-            poll_id: currentPollId,
-            name: name,
-            will_attend: willAttend,
-            title: titleValue,
-            available_dates: selectedDates,
-            payment_status: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-        };
-        
-        // Get existing responses
-        let responses = [];
-        const responsesStr = localStorage.getItem('poll_responses');
-        if (responsesStr) {
-            responses = JSON.parse(responsesStr);
-        }
-        
-        // Add new response
-        responses.push(response);
-        
-        // Save to localStorage
-        localStorage.setItem('poll_responses', JSON.stringify(responses));
-        
-        // Show success message
-        showSuccessMessage();
-        
-        // Reset form
-        form.reset();
-        document.getElementById('title-group').style.display = 'none';
-        document.getElementById('dates-group').style.display = 'none';
-        
-    } catch (error) {
-        console.error('Error submitting poll:', error);
-        alert('Failed to submit poll. Please try again.');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Submit';
+    // Validate dates if attending
+    if (attendance === 'yes' && selectedDates.length === 0) {
+        alert('Please select at least one available date.');
+        return;
     }
+    
+    // Create response object
+    const response = {
+        id: generateId(),
+        name: name,
+        will_attend: attendance,
+        title: title,
+        available_dates: selectedDates,
+        payment_status: false,
+        submitted_at: new Date().toISOString(),
+        poll_id: getCurrentPollId()
+    };
+    
+    // Save to localStorage
+    saveResponse(response);
+    
+    // Show success message
+    showSuccessMessage();
 }
 
+// Generate unique ID
 function generateId() {
     return 'resp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-function showSuccessMessage() {
-    // Create success overlay
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        animation: fadeIn 0.3s;
-    `;
-    
-    const message = document.createElement('div');
-    message.style.cssText = `
-        background: white;
-        padding: 40px;
-        border-radius: 12px;
-        text-align: center;
-        max-width: 400px;
-        animation: slideUp 0.3s;
-    `;
-    
-    message.innerHTML = `
-        <div style="font-size: 48px; margin-bottom: 20px;">✓</div>
-        <h2 style="color: #10b981; margin-bottom: 10px;">Success!</h2>
-        <p style="color: #666; margin-bottom: 20px;">Your response has been submitted successfully.</p>
-        <button onclick="this.parentElement.parentElement.remove()" style="
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-        ">OK</button>
-    `;
-    
-    overlay.appendChild(message);
-    document.body.appendChild(overlay);
-    
-    // Auto close after 3 seconds
-    setTimeout(() => {
-        if (overlay.parentElement) {
-            overlay.remove();
-        }
-    }, 3000);
+// Get current poll ID
+function getCurrentPollId() {
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    return settings.current_poll_id || 'poll_1';
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📝 Poll Page Loaded');
+// Save response to localStorage
+function saveResponse(response) {
+    // Get existing responses
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
     
-    // Load and display poll title
-    loadPollTitle();
+    // Add new response
+    responses.push(response);
     
-    // Generate date options
-    generateDateOptions();
+    // Save back to localStorage
+    localStorage.setItem('poll_responses', JSON.stringify(responses));
     
-    // Attach event listeners
-    const attendanceRadios = document.querySelectorAll('input[name="attendance"]');
-    attendanceRadios.forEach(radio => {
-        radio.addEventListener('change', handleAttendanceChange);
-    });
+    console.log('Response saved:', response);
+}
+
+// Show success message
+function showSuccessMessage() {
+    const form = document.querySelector('.poll-form');
+    const successMessage = document.getElementById('successMessage');
     
-    const form = document.getElementById('poll-form');
-    if (form) {
-        form.addEventListener('submit', handleSubmit);
-    }
+    form.style.display = 'none';
+    successMessage.style.display = 'block';
     
-    console.log('✅ Poll form ready');
-});
+    // Reset form after 3 seconds
+    setTimeout(() => {
+        form.reset();
+        form.style.display = 'flex';
+        successMessage.style.display = 'none';
+        document.getElementById('dateGroup').style.display = 'none';
+    }, 3000);
+}

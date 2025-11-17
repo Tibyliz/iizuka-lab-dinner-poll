@@ -3,157 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iizuka Lab Dinner Poll - Test Page</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <title id="page-title">Iizuka Lab Group Dinner Poll</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .test-box {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            margin-top: 50px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        .test-box h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .test-box p {
-            line-height: 1.8;
-            color: #555;
-            margin-bottom: 15px;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .info-list {
-            background: #f3f4f6;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        
-        .info-list li {
-            margin: 10px 0;
-            padding-left: 25px;
-            position: relative;
-        }
-        
-        .info-list li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #10b981;
-            font-weight: bold;
-        }
-        
-        .code-box {
-            background: #1f2937;
-            color: #10b981;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            margin: 15px 0;
-            text-align: center;
-            font-size: 1.1rem;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1><i class="fas fa-utensils"></i> Iizuka Lab Dinner Poll</h1>
-        
-        <div class="test-box">
-            <h2>🎉 Login Fix Test Page</h2>
-            
-            <p>
-                This is a test page to verify that the admin login redirect issue has been fixed.
-            </p>
-            
-            <div class="info-list">
-                <h3 style="margin-bottom: 15px;">What was fixed:</h3>
-                <ul style="list-style: none;">
-                    <li>Password validation logic</li>
-                    <li>Page redirect after successful login</li>
-                    <li>Session management</li>
-                    <li>Console logging for debugging</li>
-                    <li>Proper localStorage initialization</li>
-                </ul>
+        <div class="poll-card">
+            <div class="poll-header">
+                <i class="fas fa-utensils header-icon"></i>
+                <h1 id="poll-title">Iizuka Lab Group Dinner Poll</h1>
+                <p class="subtitle">Please fill out your availability for our group dinner</p>
             </div>
-            
-            <div class="code-box">
-                Default Password: <strong>iizukalab</strong>
-            </div>
-            
-            <div class="info-list" style="background: #dbeafe; border-left: 4px solid #3b82f6;">
-                <h3 style="color: #1e40af; margin-bottom: 15px;">
-                    <i class="fas fa-info-circle"></i> How to Test:
-                </h3>
-                <ol style="color: #1e3a8a; padding-left: 20px;">
-                    <li style="margin: 10px 0;">Click the "Admin Login" button below</li>
-                    <li style="margin: 10px 0;">Enter password: <strong>iizukalab</strong></li>
-                    <li style="margin: 10px 0;">Click "Login" button</li>
-                    <li style="margin: 10px 0;">You should be redirected to the admin dashboard</li>
-                    <li style="margin: 10px 0;">Open browser console (F12) to see debug logs</li>
-                </ol>
-            </div>
-            
-            <div class="button-group">
-                <a href="admin-login.html" class="btn btn-primary">
-                    <i class="fas fa-shield-alt"></i> Admin Login
-                </a>
-            </div>
-            
-            <div class="info-list" style="margin-top: 30px; background: #fef3c7; border-left: 4px solid #f59e0b;">
-                <h3 style="color: #92400e; margin-bottom: 15px;">
-                    <i class="fas fa-exclamation-triangle"></i> Debugging Tips:
-                </h3>
-                <ul style="list-style: none; color: #78350f;">
-                    <li style="padding-left: 0;"><strong>If login still doesn't work:</strong></li>
-                    <li>1. Open browser console (F12) and check for errors</li>
-                    <li>2. Clear browser cache and localStorage</li>
-                    <li>3. Try in incognito/private mode</li>
-                    <li>4. Make sure JavaScript is enabled</li>
-                    <li>5. Check the console logs for detailed information</li>
-                </ul>
+
+            <form id="pollForm" class="poll-form">
+                <!-- Name Input -->
+                <div class="form-group">
+                    <label for="name">
+                        <i class="fas fa-user"></i>
+                        Your Name <span class="required">*</span>
+                    </label>
+                    <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                </div>
+
+                <!-- Attendance Selection -->
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-clipboard-check"></i>
+                        Will you join the dinner? <span class="required">*</span>
+                    </label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="attendance" value="yes" required>
+                            <span class="radio-label">
+                                <i class="fas fa-check-circle"></i>
+                                Yes, I will attend
+                            </span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="attendance" value="no" required>
+                            <span class="radio-label">
+                                <i class="fas fa-times-circle"></i>
+                                No, I cannot attend
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Title/Position Selection -->
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-graduation-cap"></i>
+                        Your Title/Position <span class="required">*</span>
+                    </label>
+                    <div class="title-selection">
+                        <label class="title-option">
+                            <input type="radio" name="title" value="Master Student" required>
+                            <span class="title-card">
+                                <i class="fas fa-book"></i>
+                                <span class="title-text">Master Student</span>
+                            </span>
+                        </label>
+                        <label class="title-option">
+                            <input type="radio" name="title" value="Doctoral Student" required>
+                            <span class="title-card">
+                                <i class="fas fa-user-graduate"></i>
+                                <span class="title-text">Doctoral Student</span>
+                            </span>
+                        </label>
+                        <label class="title-option">
+                            <input type="radio" name="title" value="Teachers and Staff" required>
+                            <span class="title-card">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span class="title-text">Teachers and Staff</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Date Selection (shown only if attending) -->
+                <div class="form-group" id="dateGroup" style="display: none;">
+                    <label>
+                        <i class="fas fa-calendar-alt"></i>
+                        Select your available dates <span class="required">*</span>
+                    </label>
+                    <div id="dateOptions" class="date-options">
+                        <!-- Dates will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Response
+                </button>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <h3>Thank you!</h3>
+                <p>Your response has been submitted successfully.</p>
             </div>
         </div>
+
+        <!-- Admin Access Link -->
+        <footer style="text-align: center; padding: 30px 0 20px 0; margin-top: 50px;">
+            <a href="admin-login.html" style="color: #999; font-size: 0.85rem; text-decoration: none; opacity: 0.5; transition: opacity 0.3s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='0.5'">
+                <i class="fas fa-user-shield" style="margin-right: 5px;"></i>Admin
+            </a>
+        </footer>
     </div>
+
+    <script src="js/poll.js"></script>
 </body>
 </html>

@@ -1,216 +1,206 @@
-# Quick Start Guide
+# ⚡ Quick Start Guide
 
-## 🚀 Get Started in 5 Minutes
+## 🎯 30-Second Overview
 
-### For Participants (Poll Respondents)
+This is a **complete dinner poll system** with pricing, payment tracking, and exports.
 
-1. **Open the poll page**: `index.html`
-2. **See the custom title** at the top (e.g., "Iizuka Lab November 2024 Group Dinner Poll")
-3. **Fill in the form**:
-   - Enter your name
-   - Choose Yes/No for attendance
-   - Select your title (Master/Doctoral/Staff)
-   - If attending, select available dates
-4. **Submit** - You're done!
+**Default Password**: `iizukalab`
 
 ---
 
-### For Administrators (First Time)
+## 📦 Files to Upload
 
-#### Step 1: Login
-1. Open `admin-login.html`
-2. Enter password: `iizukalab`
-3. Click Login
-
-#### Step 2: Change Password (IMPORTANT!)
-1. Click "Settings" button
-2. Enter current password: `iizukalab`
-3. Enter new password (8+ characters)
-4. Confirm new password
-5. Save
-
-#### Step 3: Customize Poll Title (NEW!)
-1. Click **"Poll Title Settings"** button
-2. You'll see the default: "Iizuka Lab November 2024 Group Dinner Poll"
-3. **Option A**: Keep default by clicking "Reset to Default"
-4. **Option B**: Enter your custom title like:
-   - "Iizuka Lab Year-End Party 2024"
-   - "December Research Group Dinner"
-   - "Lab Celebration Event"
-5. Click "Save Title"
-
-#### Step 4: Set Pricing
-1. Click "Price Settings" button
-2. Enter total cost (e.g., 10000)
-3. Set percentages:
-   - Master Students: 20%
-   - Doctoral Students: 30%
-   - Teachers and Staff: 50%
-4. Check that total = 100%
-5. Preview prices appear automatically
-6. Click "Save Settings"
-
-#### Step 5: Monitor Responses
-- View statistics cards (responses, attending, payments)
-- Check date popularity chart
-- Use filters to find specific responses
-- Search by name
-
-#### Step 6: Track Payments
-1. See calculated amount for each person
-2. When someone pays, check their payment box
-3. Use "Paid/Unpaid" filter to see who hasn't paid
-4. Follow up with unpaid members
-
-#### Step 7: Export Results
-- Click "Export XLSX" for Excel format
-- Click "Export PDF" for printable report
-- Click "Export CSV" for simple data file
-
----
-
-## 💡 Common Tasks
-
-### Change Poll Title Anytime
 ```
-Admin Dashboard → Poll Title Settings → Enter new title → Save
-```
-
-### Reset to Default Title
-```
-Admin Dashboard → Poll Title Settings → Reset to Default → Save
-```
-
-### Start a New Poll
-```
-Admin Dashboard → Start New Poll → Confirm
-```
-
-### View Who Hasn't Paid
-```
-Admin Dashboard → Click "Unpaid" filter button
-```
-
-### Find Most Popular Date
-```
-Admin Dashboard → Look at the Date Popularity chart
+✅ index.html               (Poll form)
+✅ admin-login.html         (Login page)
+✅ admin.html               (Dashboard)
+✅ css/style.css           (Form styles)
+✅ css/admin.css           (Dashboard styles)
+✅ js/poll.js              (Form logic)
+✅ js/login.js             (Auth logic)
+✅ js/admin.js             (Dashboard logic)
 ```
 
 ---
 
-## 🎯 Quick Reference
+## 🚀 3-Step Deployment
 
-### Default Credentials
-- **Username**: None (password only)
-- **Default Password**: `iizukalab`
-- **Change immediately** after first login!
+### 1️⃣ Upload (5 min)
+- Go to: `github.com/tibyliz/iizuka-lab-dinner-poll`
+- Delete old files
+- Upload all 8 files
+- Keep folder structure (css/, js/)
 
-### Default Title Format
-```
-Iizuka Lab [Current Month] [Current Year] Group Dinner Poll
-```
+### 2️⃣ Enable Pages (1 min)
+- Settings → Pages
+- Branch: `main` → Save
+- Wait 2 minutes
 
-Examples:
-- November 2024 → "Iizuka Lab November 2024 Group Dinner Poll"
-- December 2024 → "Iizuka Lab December 2024 Group Dinner Poll"
+### 3️⃣ Test (2 min)
+- Visit: `https://tibyliz.github.io/iizuka-lab-dinner-poll/`
+- Submit test response
+- Login: password `iizukalab`
+- Change password!
 
-### Files to Access
-- **Poll Form**: `index.html`
-- **Admin Login**: `admin-login.html`
-- **Admin Dashboard**: `admin.html` (auto-redirects if not logged in)
+**Done!** 🎉
 
-### Price Calculation
-```
-Individual Price = (Total Cost × Percentage) ÷ Number of People in Group
-```
+---
 
-Example:
+## 🎛️ First-Time Setup
+
+After deployment:
+
+1. **Login**: Visit site, click "Admin" at bottom
+2. **Change Password**: Settings → New password → Save
+3. **Set Title**: Poll Title Settings → Enter or use default
+4. **Configure Pricing**: Price Settings → Enter cost & percentages
+5. **Share**: Send poll link to lab members
+
+---
+
+## 📊 Features at a Glance
+
+### For Participants
+- Fill name, attendance, title, dates
+- Submit response
+- Done in 2 minutes!
+
+### For Admin
+- **View**: Dashboard with stats & chart
+- **Price**: Set percentages (e.g., 20%, 30%, 50%)
+- **Track**: Mark who paid
+- **Filter**: By attendance, payment, name
+- **Export**: CSV, XLSX, or PDF
+- **Archive**: Save polls before starting new
+
+---
+
+## 💰 Pricing Example
+
 ```
 Total: ¥10,000
-Master 20%: ¥10,000 × 20% = ¥2,000 ÷ 5 people = ¥400/person
+Master: 20% | Doctoral: 30% | Staff: 50%
+
+Results (with 4M, 3D, 2S):
+Master: ¥500 per person
+Doctoral: ¥1,000 per person
+Staff: ¥2,500 per person
 ```
 
 ---
 
-## ⚠️ Important Notes
+## 🔑 Important Info
 
-1. **Always change default password** on first login
-2. **Percentages must total 100%** to save price settings
-3. **Title changes take effect immediately** on poll page
-4. **Session expires after 24 hours** - login again if needed
-5. **Export data regularly** for backup
+### Default Settings
+- Password: `iizukalab`
+- Title: "Iizuka Lab November 2024 Group Dinner Poll"
+- Percentages: 20%, 30%, 50%
+
+### URLs
+- Poll: `https://tibyliz.github.io/iizuka-lab-dinner-poll/`
+- Admin: `https://tibyliz.github.io/iizuka-lab-dinner-poll/admin-login.html`
+
+### Data Storage
+- Stored in browser (localStorage)
+- Export regularly for backup
+- Use same computer for admin
 
 ---
 
-## 🆘 Need Help?
+## ✅ Quick Checklist
 
-### Problem: Can't login
-**Solution**: 
-- Check password spelling/capitalization
-- Try default password: `iizukalab`
+- [ ] Files uploaded to GitHub
+- [ ] GitHub Pages enabled
+- [ ] Site accessible
+- [ ] Test response submitted
+- [ ] Admin login works
+- [ ] Password changed
+- [ ] Title configured
+- [ ] Pricing set
+- [ ] Export tested
+
+---
+
+## 🆘 Quick Troubleshooting
+
+**Can't login?**
+- Password is: `iizukalab` (all lowercase)
 - Clear browser cache
-- Use different browser
+- Try incognito mode
 
-### Problem: Title not updating on poll page
-**Solution**:
-- Refresh the poll page
-- Clear browser cache
-- Check title was saved successfully
-- Try different browser
+**Styles broken?**
+- Clear cache (Ctrl+Shift+Delete)
+- Hard refresh (Ctrl+F5)
+- Check css/ folder uploaded
 
-### Problem: Prices not calculating
-**Solution**:
-- Ensure total cost is set
-- Verify percentages equal 100%
-- Make sure responses exist
-- Refresh the admin page
-
-### Problem: Export not working
-**Solution**:
-- Allow pop-ups in browser
-- Check available disk space
-- Try different export format
-- Update browser to latest version
+**Data not saving?**
+- Allow cookies/localStorage
+- Don't use private mode
+- Check browser console (F12)
 
 ---
 
-## 📞 Support Checklist
+## 📖 Full Documentation
 
-Before asking for help:
-- [x] Checked this Quick Start Guide
-- [x] Read the full README.md
-- [x] Tried refreshing the page
-- [x] Cleared browser cache
-- [x] Tested in different browser
-- [x] Verified internet connection
+- **README.md**: Complete feature documentation
+- **DEPLOYMENT_GUIDE.md**: Detailed deployment steps
+- **FEATURES.md**: Every feature explained
+- **PROJECT_COMPLETE.md**: Project summary
 
 ---
 
-## 🎓 Tips for Success
+## 🎯 Common Tasks
 
-### For Better Organization
-1. Use descriptive poll titles
-2. Set reasonable date ranges
-3. Send reminders before deadline
-4. Export data regularly
-5. Archive old polls
+### Change Poll Title
+1. Login → Poll Title Settings
+2. Enter new title or click Reset
+3. Save
 
-### For Fair Cost Distribution
-1. Consider different financial capacities
-2. Discuss percentages with group
-3. Keep total within budget
-4. Account for actual attendance
-5. Track payments diligently
+### Set Pricing
+1. Login → Price Settings
+2. Enter total cost
+3. Set percentages (must = 100%)
+4. Preview → Save
 
-### For Efficient Management
-1. Check dashboard daily
-2. Respond to questions promptly
-3. Update payment status immediately
-4. Export final report when complete
-5. Archive poll for future reference
+### Track Payments
+1. View response table
+2. Check box when payment received
+3. Filter to see unpaid
+
+### Export Data
+1. Click Export XLSX (or CSV/PDF)
+2. File downloads automatically
+3. Contains all data + prices
+
+### Start New Poll
+1. Login → Poll Management
+2. Optionally "Save Current Poll"
+3. "Start New Poll" → Confirm
+4. All responses cleared
 
 ---
 
-**Happy polling!** 🎉
+## 💡 Pro Tips
 
-For detailed information, see the full [README.md](README.md)
+1. **Export Regularly**: Backup data weekly
+2. **Same Device**: Use one computer for admin
+3. **Test First**: Submit test response before sharing
+4. **Clear Instructions**: Tell participants what to expect
+5. **Check Chart**: Find most popular dates quickly
+
+---
+
+## 🎊 You're Ready!
+
+Upload → Enable Pages → Configure → Share
+
+**Total time: 10 minutes**
+
+Questions? Check **README.md** for details!
+
+---
+
+**Default Password**: `iizukalab` (Change it!)  
+**Your Site**: `https://tibyliz.github.io/iizuka-lab-dinner-poll/`
+
+**Happy polling!** 🍜✨

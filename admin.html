@@ -4,293 +4,261 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Iizuka Lab Dinner Poll</title>
+    <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #fff;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            padding: 40px 20px;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.1rem;
-        }
-        
-        .dashboard-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-        }
-        
-        .success-message {
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .success-message i {
-            font-size: 4rem;
-            color: #10b981;
-            margin-bottom: 20px;
-            animation: scaleIn 0.5s ease;
-        }
-        
-        .success-message h2 {
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-        }
-        
-        .success-message p {
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.6;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        .info-box {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 30px;
-        }
-        
-        .info-box h3 {
-            margin-bottom: 15px;
-            color: #a78bfa;
-        }
-        
-        .info-box ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        
-        .info-box li {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .info-box li:last-child {
-            border-bottom: none;
-        }
-        
-        .info-box li i {
-            color: #10b981;
-            margin-right: 10px;
-            width: 20px;
-        }
-        
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        
-        .session-info {
-            background: rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.5);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .logout-btn {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            color: #fca5a5;
-        }
-        
-        .logout-btn:hover {
-            background: rgba(239, 68, 68, 0.3);
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
-            <p>Iizuka Lab Dinner Poll Management System</p>
+    <div class="admin-container">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
+                <div class="header-actions">
+                    <button id="logoutBtn" class="btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalResponses">0</h3>
+                    <p>Total Responses</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="attendingCount">0</h3>
+                    <p>Attending</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="notAttendingCount">0</h3>
+                    <p>Not Attending</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="paidCount">0 / 0</h3>
+                    <p>Payment Status</p>
+                </div>
+            </div>
         </div>
-        
-        <div class="dashboard-card">
-            <div class="session-info">
-                <i class="fas fa-check-circle"></i>
-                <strong>Login Successful!</strong> Welcome to the admin dashboard.
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button id="titleSettingsBtn" class="btn-primary">
+                <i class="fas fa-heading"></i> Poll Title Settings
+            </button>
+            <button id="priceSettingsBtn" class="btn-primary">
+                <i class="fas fa-calculator"></i> Price Settings
+            </button>
+            <button id="pollManagementBtn" class="btn-primary">
+                <i class="fas fa-archive"></i> Poll Management
+            </button>
+            <button id="settingsBtn" class="btn-secondary">
+                <i class="fas fa-cog"></i> Settings
+            </button>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-container">
+            <h2><i class="fas fa-chart-bar"></i> Most Popular Dates</h2>
+            <canvas id="dateChart" style="height: 400px;"></canvas>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>Attendance Filter:</label>
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="yes">Attending</button>
+                <button class="filter-btn" data-filter="no">Not Attending</button>
             </div>
-            
-            <div class="success-message">
-                <i class="fas fa-check-circle"></i>
-                <h2>🎉 Login Fixed Successfully!</h2>
-                <p>
-                    You have successfully logged in to the admin dashboard.<br>
-                    The login redirect issue has been resolved!
-                </p>
+            <div class="filter-group">
+                <label>Payment Filter:</label>
+                <button class="filter-btn active" data-payment-filter="all">All</button>
+                <button class="filter-btn" data-payment-filter="paid">Paid</button>
+                <button class="filter-btn" data-payment-filter="unpaid">Unpaid</button>
             </div>
-            
-            <div class="info-box">
-                <h3><i class="fas fa-info-circle"></i> What's Fixed:</h3>
-                <ul>
-                    <li><i class="fas fa-check"></i> Password validation now works correctly</li>
-                    <li><i class="fas fa-check"></i> Page redirect to admin.html is functioning</li>
-                    <li><i class="fas fa-check"></i> Session management is properly implemented</li>
-                    <li><i class="fas fa-check"></i> Console logging added for debugging</li>
-                    <li><i class="fas fa-check"></i> Default password "iizukalab" is initialized</li>
-                </ul>
+            <div class="filter-group">
+                <input type="text" id="searchInput" placeholder="Search by name..." class="search-input">
             </div>
-            
-            <div class="info-box">
-                <h3><i class="fas fa-cog"></i> Current Session Info:</h3>
-                <ul>
-                    <li><i class="fas fa-user"></i> Status: <strong>Authenticated</strong></li>
-                    <li><i class="fas fa-clock"></i> Login Time: <strong id="loginTime">Loading...</strong></li>
-                    <li><i class="fas fa-hourglass-half"></i> Session Valid: <strong>24 hours</strong></li>
-                </ul>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="export-buttons">
+            <button id="exportCSV" class="btn-export">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+            <button id="exportXLSX" class="btn-export">
+                <i class="fas fa-file-excel"></i> Export XLSX
+            </button>
+            <button id="exportPDF" class="btn-export">
+                <i class="fas fa-file-pdf"></i> Export PDF
+            </button>
+        </div>
+
+        <!-- Responses Table -->
+        <div class="table-container">
+            <h2><i class="fas fa-list"></i> Responses</h2>
+            <table id="responsesTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Attendance</th>
+                        <th>Title</th>
+                        <th>Available Dates</th>
+                        <th>Price</th>
+                        <th>Paid</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody id="responsesBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Title Settings Modal -->
+    <div id="titleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-heading"></i> Poll Title Settings</h2>
+                <span class="close">&times;</span>
             </div>
-            
-            <div class="button-group">
-                <a href="index.html" class="btn btn-primary">
-                    <i class="fas fa-poll"></i> View Poll Page
-                </a>
-                <button onclick="logout()" class="btn logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
-            </div>
-            
-            <div class="info-box" style="margin-top: 30px; background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.5);">
-                <h3><i class="fas fa-code"></i> Technical Details:</h3>
-                <ul>
-                    <li><i class="fas fa-check"></i> Using localStorage for data storage</li>
-                    <li><i class="fas fa-check"></i> Relative paths for GitHub Pages compatibility</li>
-                    <li><i class="fas fa-check"></i> Session expires after 24 hours</li>
-                    <li><i class="fas fa-check"></i> Default password: <code>iizukalab</code></li>
-                </ul>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Poll Title:</label>
+                    <input type="text" id="pollTitleInput" placeholder="Enter custom title">
+                    <p class="hint">Leave empty or click "Reset" to use default format: "Iizuka Lab [Month] [Year] Group Dinner Poll"</p>
+                </div>
+                <div class="modal-actions">
+                    <button id="resetTitleBtn" class="btn-secondary">
+                        <i class="fas fa-undo"></i> Reset to Default
+                    </button>
+                    <button id="saveTitleBtn" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Title
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        console.log('Admin dashboard loaded');
-        
-        // Check authentication
-        function checkAuth() {
-            const sessionData = localStorage.getItem('admin_session');
-            
-            if (!sessionData) {
-                console.log('No session found, redirecting to login...');
-                window.location.href = 'admin-login.html';
-                return false;
-            }
-            
-            try {
-                const session = JSON.parse(sessionData);
-                const now = Date.now();
-                const sessionAge = now - session.timestamp;
-                
-                console.log('Session data:', session);
-                console.log('Session age (ms):', sessionAge);
-                
-                // Check if session is expired (24 hours)
-                if (sessionAge > session.expiresIn) {
-                    console.log('Session expired, redirecting to login...');
-                    localStorage.removeItem('admin_session');
-                    window.location.href = 'admin-login.html';
-                    return false;
-                }
-                
-                // Display login time
-                const loginDate = new Date(session.timestamp);
-                document.getElementById('loginTime').textContent = loginDate.toLocaleString();
-                
-                console.log('Session valid');
-                return true;
-                
-            } catch (error) {
-                console.error('Error checking session:', error);
-                window.location.href = 'admin-login.html';
-                return false;
-            }
-        }
-        
-        // Logout function
-        function logout() {
-            console.log('Logging out...');
-            localStorage.removeItem('admin_session');
-            window.location.href = 'admin-login.html';
-        }
-        
-        // Check authentication on page load
-        checkAuth();
-        
-        console.log('Current localStorage data:');
-        console.log('- admin_password:', localStorage.getItem('admin_password'));
-        console.log('- admin_session:', localStorage.getItem('admin_session'));
-    </script>
+    <!-- Price Settings Modal -->
+    <div id="priceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-calculator"></i> Price Settings</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Total Cost (¥):</label>
+                    <input type="number" id="totalCost" placeholder="Enter total cost" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Master Student Percentage (%):</label>
+                    <input type="number" id="masterPercent" placeholder="e.g., 20" min="0" max="100" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Doctoral Student Percentage (%):</label>
+                    <input type="number" id="doctoralPercent" placeholder="e.g., 30" min="0" max="100" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Teachers and Staff Percentage (%):</label>
+                    <input type="number" id="staffPercent" placeholder="e.g., 50" min="0" max="100" step="0.1">
+                </div>
+                <div id="percentageWarning" class="warning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Percentages must add up to 100%
+                </div>
+                <div id="percentageSuccess" class="success" style="display: none;">
+                    <i class="fas fa-check-circle"></i>
+                    Total: 100% ✓
+                </div>
+                <div id="pricePreview" class="price-preview">
+                    <!-- Price preview will be inserted here -->
+                </div>
+                <div class="modal-actions">
+                    <button id="savePriceBtn" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Poll Management Modal -->
+    <div id="pollManagementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-archive"></i> Poll Management</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="poll-actions">
+                    <button id="saveCurrentPoll" class="btn-primary full-width">
+                        <i class="fas fa-save"></i> Save Current Poll
+                    </button>
+                    <button id="startNewPoll" class="btn-secondary full-width">
+                        <i class="fas fa-plus"></i> Start New Poll
+                    </button>
+                </div>
+                <div id="archivedPolls" class="archived-polls">
+                    <h3>Archived Polls</h3>
+                    <div id="archiveList">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Change Password:</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password">
+                </div>
+                <div class="modal-actions">
+                    <button id="changePasswordBtn" class="btn-primary">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
 </body>
 </html>

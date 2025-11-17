@@ -1,598 +1,648 @@
-// Admin.js - Admin Dashboard with localStorage (GitHub Pages Compatible)
-// Complete rewrite to eliminate SQL.js dependency and work reliably on GitHub Pages
+// Admin Dashboard JavaScript - Complete with ALL features
 
-// Global state
-let currentPollId = null;
+let currentChart = null;
 let allResponses = [];
-let adminSettings = {};
+let filteredResponses = [];
 
-// ===== AUTHENTICATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Admin dashboard loaded');
+    
+    // Check authentication
+    if (!checkAuthentication()) {
+        window.location.href = 'admin-login.html';
+        return;
+    }
+    
+    // Load data and initialize
+    loadAllData();
+    setupEventListeners();
+    updateDashboard();
+});
 
+// Check authentication
 function checkAuthentication() {
-    try {
-        const sessionStr = sessionStorage.getItem('admin_session');
-        
-        if (!sessionStr) {
-            redirectToLogin();
-            return false;
-        }
-        
-        const session = JSON.parse(sessionStr);
-        const now = new Date();
-        const expiresAt = new Date(session.expiresAt);
-        
-        if (!session.authenticated || now >= expiresAt) {
-            sessionStorage.removeItem('admin_session');
-            redirectToLogin();
-            return false;
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Authentication error:', error);
-        redirectToLogin();
+    const session = JSON.parse(localStorage.getItem('admin_session') || '{}');
+    
+    if (!session.authenticated) {
         return false;
     }
-}
-
-function redirectToLogin() {
-    window.location.href = 'admin-login.html';
-}
-
-function handleLogout() {
-    sessionStorage.removeItem('admin_session');
-    redirectToLogin();
-}
-
-// ===== DATA MANAGEMENT =====
-
-function loadAdminSettings() {
-    try {
-        const settingsStr = localStorage.getItem('admin_settings');
-        if (settingsStr) {
-            adminSettings = JSON.parse(settingsStr);
-            currentPollId = adminSettings.current_poll_id;
-            return adminSettings;
-        } else {
-            // Initialize if not exists
-            adminSettings = {
-                password: 'iizukalab',
-                total_cost: 0,
-                master_percentage: 20,
-                doctoral_percentage: 30,
-                staff_percentage: 50,
-                poll_title: getDefaultPollTitle(),
-                current_poll_id: generatePollId(),
-                created_at: new Date().toISOString()
-            };
-            localStorage.setItem('admin_settings', JSON.stringify(adminSettings));
-            currentPollId = adminSettings.current_poll_id;
-            return adminSettings;
-        }
-    } catch (error) {
-        console.error('Error loading admin settings:', error);
-        return null;
-    }
-}
-
-function saveAdminSettings(settings) {
-    try {
-        localStorage.setItem('admin_settings', JSON.stringify(settings));
-        adminSettings = settings;
-        return true;
-    } catch (error) {
-        console.error('Error saving admin settings:', error);
+    
+    // Check if session expired (24 hours)
+    const now = Date.now();
+    const sessionAge = now - session.timestamp;
+    
+    if (sessionAge > session.expiresIn) {
+        localStorage.removeItem('admin_session');
         return false;
     }
+    
+    return true;
 }
 
-function loadPollResponses() {
-    try {
-        const responsesStr = localStorage.getItem('poll_responses');
-        if (responsesStr) {
-            const all = JSON.parse(responsesStr);
-            // Filter by current poll ID
-            allResponses = all.filter(r => r.poll_id === currentPollId);
-            return allResponses;
-        } else {
-            allResponses = [];
-            localStorage.setItem('poll_responses', JSON.stringify([]));
-            return [];
+// Load all data
+function loadAllData() {
+    allResponses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    filteredResponses = [...allResponses];
+    console.log('Loaded responses:', allResponses.length);
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    
+    // Modal buttons
+    document.getElementById('titleSettingsBtn').addEventListener('click', () => openModal('titleModal'));
+    document.getElementById('priceSettingsBtn').addEventListener('click', () => openModal('priceModal'));
+    document.getElementById('pollManagementBtn').addEventListener('click', () => openModal('pollManagementModal'));
+    document.getElementById('settingsBtn').addEventListener('click', () => openModal('settingsModal'));
+    
+    // Close buttons
+    document.querySelectorAll('.close').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.modal').style.display = 'none';
+        });
+    });
+    
+    // Click outside to close
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            e.target.style.display = 'none';
         }
-    } catch (error) {
-        console.error('Error loading poll responses:', error);
-        return [];
-    }
+    });
+    
+    // Title settings
+    document.getElementById('resetTitleBtn').addEventListener('click', resetTitle);
+    document.getElementById('saveTitleBtn').addEventListener('click', saveTitle);
+    
+    // Price settings
+    document.getElementById('masterPercent').addEventListener('input', validatePercentages);
+    document.getElementById('doctoralPercent').addEventListener('input', validatePercentages);
+    document.getElementById('staffPercent').addEventListener('input', validatePercentages);
+    document.getElementById('totalCost').addEventListener('input', updatePricePreview);
+    document.getElementById('savePriceBtn').addEventListener('click', savePriceSettings);
+    
+    // Poll management
+    document.getElementById('saveCurrentPoll').addEventListener('click', saveCurrentPoll);
+    document.getElementById('startNewPoll').addEventListener('click', startNewPoll);
+    
+    // Settings
+    document.getElementById('changePasswordBtn').addEventListener('click', changePassword);
+    
+    // Filters
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            applyFilters();
+        });
+    });
+    
+    document.querySelectorAll('.filter-btn[data-payment-filter]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn[data-payment-filter]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            applyFilters();
+        });
+    });
+    
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    
+    // Export buttons
+    document.getElementById('exportCSV').addEventListener('click', exportToCSV);
+    document.getElementById('exportXLSX').addEventListener('click', exportToXLSX);
+    document.getElementById('exportPDF').addEventListener('click', exportToPDF);
 }
 
-function updateResponsePaymentStatus(responseId, paid) {
-    try {
-        const allStr = localStorage.getItem('poll_responses');
-        if (!allStr) return false;
-        
-        const all = JSON.parse(allStr);
-        const index = all.findIndex(r => r.id === responseId);
-        
-        if (index !== -1) {
-            all[index].payment_status = paid;
-            all[index].updated_at = new Date().toISOString();
-            localStorage.setItem('poll_responses', JSON.stringify(all));
-            
-            // Update local array
-            const localIndex = allResponses.findIndex(r => r.id === responseId);
-            if (localIndex !== -1) {
-                allResponses[localIndex].payment_status = paid;
+// Update dashboard
+function updateDashboard() {
+    updateStatistics();
+    updateChart();
+    updateTable();
+    loadTitleSettings();
+    loadPriceSettings();
+    loadArchivedPolls();
+}
+
+// Update statistics
+function updateStatistics() {
+    const total = allResponses.length;
+    const attending = allResponses.filter(r => r.will_attend === 'yes').length;
+    const notAttending = total - attending;
+    const paid = allResponses.filter(r => r.payment_status).length;
+    
+    document.getElementById('totalResponses').textContent = total;
+    document.getElementById('attendingCount').textContent = attending;
+    document.getElementById('notAttendingCount').textContent = notAttending;
+    document.getElementById('paidCount').textContent = `${paid} / ${attending}`;
+}
+
+// Update chart
+function updateChart() {
+    const attendingResponses = allResponses.filter(r => r.will_attend === 'yes');
+    const dateCounts = {};
+    
+    attendingResponses.forEach(response => {
+        response.available_dates.forEach(date => {
+            dateCounts[date] = (dateCounts[date] || 0) + 1;
+        });
+    });
+    
+    const sortedDates = Object.entries(dateCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+    
+    const labels = sortedDates.map(([date]) => formatDate(date));
+    const data = sortedDates.map(([, count]) => count);
+    
+    const ctx = document.getElementById('dateChart').getContext('2d');
+    
+    if (currentChart) {
+        currentChart.destroy();
+    }
+    
+    currentChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of People Available',
+                data: data,
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
             }
-            
-            return true;
         }
-        return false;
-    } catch (error) {
-        console.error('Error updating payment status:', error);
-        return false;
+    });
+}
+
+// Format date
+function formatDate(dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+}
+
+// Update table
+function updateTable() {
+    const tbody = document.getElementById('responsesBody');
+    tbody.innerHTML = '';
+    
+    if (filteredResponses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #718096;">No responses found</td></tr>';
+        return;
+    }
+    
+    filteredResponses.forEach((response, index) => {
+        const row = document.createElement('tr');
+        
+        const attendanceBadge = response.will_attend === 'yes' 
+            ? '<span class="badge badge-yes">Yes</span>' 
+            : '<span class="badge badge-no">No</span>';
+        
+        const dates = response.will_attend === 'yes' && response.available_dates.length > 0
+            ? response.available_dates.map(d => formatDate(d)).join(', ')
+            : '—';
+        
+        const price = calculateIndividualPrice(response);
+        const priceDisplay = response.will_attend === 'yes' && price > 0 
+            ? `¥${price.toFixed(2)}` 
+            : '—';
+        
+        const paidCheckbox = response.will_attend === 'yes'
+            ? `<input type="checkbox" class="payment-checkbox" data-id="${response.id}" ${response.payment_status ? 'checked' : ''}>`
+            : '—';
+        
+        const submittedDate = new Date(response.submitted_at).toLocaleString();
+        
+        row.innerHTML = `
+            <td>${response.name}</td>
+            <td>${attendanceBadge}</td>
+            <td>${response.title}</td>
+            <td>${dates}</td>
+            <td>${priceDisplay}</td>
+            <td>${paidCheckbox}</td>
+            <td>${submittedDate}</td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+    
+    // Add event listeners to checkboxes
+    document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updatePaymentStatus(this.dataset.id, this.checked);
+        });
+    });
+}
+
+// Calculate individual price
+function calculateIndividualPrice(response) {
+    if (response.will_attend !== 'yes') {
+        return 0;
+    }
+    
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    const totalCost = parseFloat(settings.total_cost) || 0;
+    const masterPercent = parseFloat(settings.master_percent) || 0;
+    const doctoralPercent = parseFloat(settings.doctoral_percent) || 0;
+    const staffPercent = parseFloat(settings.staff_percent) || 0;
+    
+    if (totalCost === 0 || (masterPercent + doctoralPercent + staffPercent) !== 100) {
+        return 0;
+    }
+    
+    // Count people by title
+    const attendingResponses = allResponses.filter(r => r.will_attend === 'yes');
+    const masterCount = attendingResponses.filter(r => r.title === 'Master Student').length;
+    const doctoralCount = attendingResponses.filter(r => r.title === 'Doctoral Student').length;
+    const staffCount = attendingResponses.filter(r => r.title === 'Teachers and Staff').length;
+    
+    // Calculate portion for each group
+    const masterPortion = totalCost * (masterPercent / 100);
+    const doctoralPortion = totalCost * (doctoralPercent / 100);
+    const staffPortion = totalCost * (staffPercent / 100);
+    
+    // Calculate individual price
+    if (response.title === 'Master Student' && masterCount > 0) {
+        return masterPortion / masterCount;
+    } else if (response.title === 'Doctoral Student' && doctoralCount > 0) {
+        return doctoralPortion / doctoralCount;
+    } else if (response.title === 'Teachers and Staff' && staffCount > 0) {
+        return staffPortion / staffCount;
+    }
+    
+    return 0;
+}
+
+// Update payment status
+function updatePaymentStatus(id, paid) {
+    const response = allResponses.find(r => r.id === id);
+    if (response) {
+        response.payment_status = paid;
+        localStorage.setItem('poll_responses', JSON.stringify(allResponses));
+        updateStatistics();
     }
 }
 
-// ===== UTILITY FUNCTIONS =====
+// Apply filters
+function applyFilters() {
+    const attendanceFilter = document.querySelector('.filter-btn[data-filter].active').dataset.filter;
+    const paymentFilter = document.querySelector('.filter-btn[data-payment-filter].active').dataset.paymentFilter;
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    
+    filteredResponses = allResponses.filter(response => {
+        // Attendance filter
+        if (attendanceFilter !== 'all' && response.will_attend !== attendanceFilter) {
+            return false;
+        }
+        
+        // Payment filter
+        if (paymentFilter === 'paid' && !response.payment_status) {
+            return false;
+        }
+        if (paymentFilter === 'unpaid' && (response.payment_status || response.will_attend !== 'yes')) {
+            return false;
+        }
+        
+        // Search filter
+        if (searchTerm && !response.name.toLowerCase().includes(searchTerm)) {
+            return false;
+        }
+        
+        return true;
+    });
+    
+    updateTable();
+}
 
-function getDefaultPollTitle() {
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
+// Modal functions
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+// Title settings
+function loadTitleSettings() {
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    document.getElementById('pollTitleInput').value = settings.poll_title || '';
+}
+
+function resetTitle() {
+    const defaultTitle = getDefaultTitle();
+    document.getElementById('pollTitleInput').value = defaultTitle;
+}
+
+function saveTitle() {
+    const title = document.getElementById('pollTitleInput').value.trim() || getDefaultTitle();
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    settings.poll_title = title;
+    localStorage.setItem('admin_settings', JSON.stringify(settings));
+    alert('Title saved successfully!');
+    document.getElementById('titleModal').style.display = 'none';
+}
+
+function getDefaultTitle() {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
     const now = new Date();
     const month = months[now.getMonth()];
     const year = now.getFullYear();
     return `Iizuka Lab ${month} ${year} Group Dinner Poll`;
 }
 
-function generatePollId() {
-    return 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+// Price settings
+function loadPriceSettings() {
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    document.getElementById('totalCost').value = settings.total_cost || '';
+    document.getElementById('masterPercent').value = settings.master_percent || 20;
+    document.getElementById('doctoralPercent').value = settings.doctoral_percent || 30;
+    document.getElementById('staffPercent').value = settings.staff_percent || 50;
+    validatePercentages();
+    updatePricePreview();
 }
 
-function generateId() {
-    return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
-// ===== DASHBOARD UI =====
-
-function updateDashboard() {
-    const responses = loadPollResponses();
+function validatePercentages() {
+    const master = parseFloat(document.getElementById('masterPercent').value) || 0;
+    const doctoral = parseFloat(document.getElementById('doctoralPercent').value) || 0;
+    const staff = parseFloat(document.getElementById('staffPercent').value) || 0;
+    const total = master + doctoral + staff;
     
-    // Calculate statistics
-    const totalResponses = responses.length;
-    const attending = responses.filter(r => r.will_attend === 'yes').length;
-    const notAttending = totalResponses - attending;
+    const warning = document.getElementById('percentageWarning');
+    const success = document.getElementById('percentageSuccess');
     
-    // Count by title
-    const masterCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'master').length;
-    const doctoralCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'doctoral').length;
-    const staffCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'staff').length;
-    
-    // Payment status
-    const paid = responses.filter(r => r.payment_status === true).length;
-    const unpaid = totalResponses - paid;
-    
-    // Update stats display
-    document.getElementById('total-responses').textContent = totalResponses;
-    document.getElementById('attending-count').textContent = attending;
-    document.getElementById('not-attending-count').textContent = notAttending;
-    document.getElementById('payment-status').textContent = `${paid} / ${totalResponses} paid`;
-    
-    // Update popular dates chart
-    updatePopularDatesChart(responses);
-    
-    // Update responses table
-    updateResponsesTable(responses);
-}
-
-function updatePopularDatesChart(responses) {
-    const dateCount = {};
-    
-    responses.forEach(response => {
-        if (response.will_attend === 'yes' && response.available_dates) {
-            response.available_dates.forEach(date => {
-                dateCount[date] = (dateCount[date] || 0) + 1;
-            });
-        }
-    });
-    
-    // Sort by count
-    const sortedDates = Object.entries(dateCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10); // Top 10 dates
-    
-    const chartContainer = document.getElementById('dates-chart');
-    
-    if (sortedDates.length === 0) {
-        chartContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No date preferences yet</p>';
-        return;
-    }
-    
-    const maxCount = sortedDates[0][1];
-    
-    chartContainer.innerHTML = sortedDates.map(([date, count]) => {
-        const percentage = (count / maxCount) * 100;
-        return `
-            <div class="date-bar">
-                <div class="date-label">${date}</div>
-                <div class="bar-container">
-                    <div class="bar-fill" style="width: ${percentage}%"></div>
-                    <div class="bar-count">${count}</div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function updateResponsesTable(responses) {
-    const tbody = document.getElementById('responses-tbody');
-    
-    if (responses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #999;">No responses yet</td></tr>';
-        return;
-    }
-    
-    // Calculate prices
-    const prices = calculatePrices(responses);
-    
-    tbody.innerHTML = responses.map(response => {
-        const price = prices[response.id] || 0;
-        const titleDisplay = {
-            'master': '📚 Master Student',
-            'doctoral': '🎓 Doctoral Student',
-            'staff': '👨‍🏫 Teachers & Staff'
-        }[response.title] || response.title;
-        
-        const paymentIcon = response.payment_status ? 
-            '<span style="color: #10b981;">✓ Paid</span>' : 
-            '<span style="color: #ef4444;">✗ Unpaid</span>';
-        
-        const paymentCheckbox = `
-            <input type="checkbox" 
-                   ${response.payment_status ? 'checked' : ''} 
-                   onchange="togglePaymentStatus('${response.id}', this.checked)"
-                   style="cursor: pointer; width: 18px; height: 18px;">
-        `;
-        
-        return `
-            <tr>
-                <td>${response.name}</td>
-                <td><span class="status-badge ${response.will_attend === 'yes' ? 'status-yes' : 'status-no'}">${response.will_attend === 'yes' ? 'Yes' : 'No'}</span></td>
-                <td>${titleDisplay}</td>
-                <td>${response.will_attend === 'yes' && response.available_dates ? response.available_dates.join(', ') : 'N/A'}</td>
-                <td>¥${price.toFixed(2)}</td>
-                <td>${paymentIcon}</td>
-                <td>${paymentCheckbox}</td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function calculatePrices(responses) {
-    const settings = adminSettings;
-    const totalCost = parseFloat(settings.total_cost) || 0;
-    
-    if (totalCost === 0) {
-        return {}; // No prices if total cost not set
-    }
-    
-    // Count attending people by title
-    const masterCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'master').length;
-    const doctoralCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'doctoral').length;
-    const staffCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'staff').length;
-    
-    const masterPercentage = parseFloat(settings.master_percentage) || 0;
-    const doctoralPercentage = parseFloat(settings.doctoral_percentage) || 0;
-    const staffPercentage = parseFloat(settings.staff_percentage) || 0;
-    
-    // Calculate per-person prices
-    const masterPrice = masterCount > 0 ? (totalCost * masterPercentage / 100) / masterCount : 0;
-    const doctoralPrice = doctoralCount > 0 ? (totalCost * doctoralPercentage / 100) / doctoralCount : 0;
-    const staffPrice = staffCount > 0 ? (totalCost * staffPercentage / 100) / staffCount : 0;
-    
-    // Create price map
-    const priceMap = {};
-    responses.forEach(response => {
-        if (response.will_attend === 'yes') {
-            if (response.title === 'master') priceMap[response.id] = masterPrice;
-            else if (response.title === 'doctoral') priceMap[response.id] = doctoralPrice;
-            else if (response.title === 'staff') priceMap[response.id] = staffPrice;
-        } else {
-            priceMap[response.id] = 0;
-        }
-    });
-    
-    return priceMap;
-}
-
-// ===== EVENT HANDLERS =====
-
-function togglePaymentStatus(responseId, paid) {
-    const success = updateResponsePaymentStatus(responseId, paid);
-    if (success) {
-        updateDashboard();
+    if (Math.abs(total - 100) < 0.01) {
+        warning.style.display = 'none';
+        success.style.display = 'flex';
     } else {
-        alert('Failed to update payment status');
+        warning.style.display = 'flex';
+        success.style.display = 'none';
     }
-}
-
-function filterResponses(filter) {
-    const allButtons = document.querySelectorAll('.filter-btn');
-    allButtons.forEach(btn => btn.classList.remove('active'));
-    
-    event.target.classList.add('active');
-    
-    const responses = loadPollResponses();
-    let filtered = responses;
-    
-    if (filter === 'attending') {
-        filtered = responses.filter(r => r.will_attend === 'yes');
-    } else if (filter === 'not-attending') {
-        filtered = responses.filter(r => r.will_attend === 'no');
-    } else if (filter === 'paid') {
-        filtered = responses.filter(r => r.payment_status === true);
-    } else if (filter === 'unpaid') {
-        filtered = responses.filter(r => r.payment_status === false);
-    }
-    
-    updateResponsesTable(filtered);
-}
-
-function searchResponses() {
-    const searchTerm = document.getElementById('search-input').value.toLowerCase();
-    const responses = loadPollResponses();
-    
-    const filtered = responses.filter(response => {
-        return response.name.toLowerCase().includes(searchTerm) ||
-               (response.available_dates && response.available_dates.some(d => d.toLowerCase().includes(searchTerm)));
-    });
-    
-    updateResponsesTable(filtered);
-}
-
-// ===== MODAL FUNCTIONS =====
-
-function openPriceSettings() {
-    const settings = adminSettings;
-    
-    document.getElementById('total-cost').value = settings.total_cost || 0;
-    document.getElementById('master-percentage').value = settings.master_percentage || 20;
-    document.getElementById('doctoral-percentage').value = settings.doctoral_percentage || 30;
-    document.getElementById('staff-percentage').value = settings.staff_percentage || 50;
     
     updatePricePreview();
-    
-    document.getElementById('price-modal').style.display = 'flex';
-}
-
-function closePriceSettings() {
-    document.getElementById('price-modal').style.display = 'none';
 }
 
 function updatePricePreview() {
-    const totalCost = parseFloat(document.getElementById('total-cost').value) || 0;
-    const masterPerc = parseFloat(document.getElementById('master-percentage').value) || 0;
-    const doctoralPerc = parseFloat(document.getElementById('doctoral-percentage').value) || 0;
-    const staffPerc = parseFloat(document.getElementById('staff-percentage').value) || 0;
+    const totalCost = parseFloat(document.getElementById('totalCost').value) || 0;
+    const master = parseFloat(document.getElementById('masterPercent').value) || 0;
+    const doctoral = parseFloat(document.getElementById('doctoralPercent').value) || 0;
+    const staff = parseFloat(document.getElementById('staffPercent').value) || 0;
+    const percentTotal = master + doctoral + staff;
     
-    const total = masterPerc + doctoralPerc + staffPerc;
-    const totalDisplay = document.getElementById('percentage-total');
-    totalDisplay.textContent = `Total: ${total.toFixed(1)}%`;
+    const previewDiv = document.getElementById('pricePreview');
     
-    if (Math.abs(total - 100) < 0.1) {
-        totalDisplay.style.color = '#10b981';
-        totalDisplay.innerHTML = `Total: ${total.toFixed(1)}% ✓`;
-    } else {
-        totalDisplay.style.color = '#ef4444';
-        totalDisplay.innerHTML = `Total: ${total.toFixed(1)}% ⚠ (Must equal 100%)`;
+    if (totalCost === 0 || Math.abs(percentTotal - 100) > 0.01) {
+        previewDiv.innerHTML = '<p style="color: #718096; text-align: center;">Enter total cost and valid percentages to see preview</p>';
+        return;
     }
     
     // Count people by title
-    const responses = loadPollResponses();
-    const masterCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'master').length;
-    const doctoralCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'doctoral').length;
-    const staffCount = responses.filter(r => r.will_attend === 'yes' && r.title === 'staff').length;
+    const attendingResponses = allResponses.filter(r => r.will_attend === 'yes');
+    const masterCount = attendingResponses.filter(r => r.title === 'Master Student').length;
+    const doctoralCount = attendingResponses.filter(r => r.title === 'Doctoral Student').length;
+    const staffCount = attendingResponses.filter(r => r.title === 'Teachers and Staff').length;
     
-    // Calculate prices
-    const masterPrice = masterCount > 0 ? (totalCost * masterPerc / 100) / masterCount : 0;
-    const doctoralPrice = doctoralCount > 0 ? (totalCost * doctoralPerc / 100) / doctoralCount : 0;
-    const staffPrice = staffCount > 0 ? (totalCost * staffPerc / 100) / staffCount : 0;
+    const masterPortion = totalCost * (master / 100);
+    const doctoralPortion = totalCost * (doctoral / 100);
+    const staffPortion = totalCost * (staff / 100);
     
-    document.getElementById('preview-master').textContent = `Master: ¥${masterPrice.toFixed(2)} × ${masterCount} = ¥${(masterPrice * masterCount).toFixed(2)}`;
-    document.getElementById('preview-doctoral').textContent = `Doctoral: ¥${doctoralPrice.toFixed(2)} × ${doctoralCount} = ¥${(doctoralPrice * doctoralCount).toFixed(2)}`;
-    document.getElementById('preview-staff').textContent = `Staff: ¥${staffPrice.toFixed(2)} × ${staffCount} = ¥${(staffPrice * staffCount).toFixed(2)}`;
+    const masterPrice = masterCount > 0 ? masterPortion / masterCount : 0;
+    const doctoralPrice = doctoralCount > 0 ? doctoralPortion / doctoralCount : 0;
+    const staffPrice = staffCount > 0 ? staffPortion / staffCount : 0;
+    
+    previewDiv.innerHTML = `
+        <h4>Price Preview</h4>
+        <div class="price-item">
+            <span>Master Students (${masterCount} people):</span>
+            <span>¥${masterPrice.toFixed(2)} per person</span>
+        </div>
+        <div class="price-item">
+            <span>Doctoral Students (${doctoralCount} people):</span>
+            <span>¥${doctoralPrice.toFixed(2)} per person</span>
+        </div>
+        <div class="price-item">
+            <span>Teachers/Staff (${staffCount} people):</span>
+            <span>¥${staffPrice.toFixed(2)} per person</span>
+        </div>
+    `;
 }
 
 function savePriceSettings() {
-    const totalCost = parseFloat(document.getElementById('total-cost').value) || 0;
-    const masterPerc = parseFloat(document.getElementById('master-percentage').value) || 0;
-    const doctoralPerc = parseFloat(document.getElementById('doctoral-percentage').value) || 0;
-    const staffPerc = parseFloat(document.getElementById('staff-percentage').value) || 0;
+    const totalCost = parseFloat(document.getElementById('totalCost').value) || 0;
+    const master = parseFloat(document.getElementById('masterPercent').value) || 0;
+    const doctoral = parseFloat(document.getElementById('doctoralPercent').value) || 0;
+    const staff = parseFloat(document.getElementById('staffPercent').value) || 0;
     
-    const total = masterPerc + doctoralPerc + staffPerc;
-    
-    if (Math.abs(total - 100) > 0.1) {
-        alert('Error: Percentages must total 100%');
+    if (Math.abs(master + doctoral + staff - 100) > 0.01) {
+        alert('Percentages must add up to 100%!');
         return;
     }
     
-    adminSettings.total_cost = totalCost;
-    adminSettings.master_percentage = masterPerc;
-    adminSettings.doctoral_percentage = doctoralPerc;
-    adminSettings.staff_percentage = staffPerc;
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    settings.total_cost = totalCost;
+    settings.master_percent = master;
+    settings.doctoral_percent = doctoral;
+    settings.staff_percent = staff;
+    localStorage.setItem('admin_settings', JSON.stringify(settings));
     
-    if (saveAdminSettings(adminSettings)) {
-        alert('Price settings saved successfully!');
-        closePriceSettings();
-        updateDashboard();
-    } else {
-        alert('Failed to save price settings');
-    }
+    alert('Price settings saved successfully!');
+    document.getElementById('priceModal').style.display = 'none';
+    updateDashboard();
 }
 
-function openPollTitleSettings() {
-    const settings = adminSettings;
-    document.getElementById('poll-title-input').value = settings.poll_title || getDefaultPollTitle();
-    document.getElementById('title-modal').style.display = 'flex';
-}
-
-function closePollTitleSettings() {
-    document.getElementById('title-modal').style.display = 'none';
-}
-
-function resetToDefaultTitle() {
-    document.getElementById('poll-title-input').value = getDefaultPollTitle();
-}
-
-function savePollTitle() {
-    const newTitle = document.getElementById('poll-title-input').value.trim();
+// Poll management
+function loadArchivedPolls() {
+    const archived = JSON.parse(localStorage.getItem('archived_polls') || '[]');
+    const archiveList = document.getElementById('archiveList');
     
-    if (!newTitle) {
-        alert('Title cannot be empty');
+    if (archived.length === 0) {
+        archiveList.innerHTML = '<p style="color: #718096; text-align: center;">No archived polls yet</p>';
         return;
     }
     
-    adminSettings.poll_title = newTitle;
+    archiveList.innerHTML = archived.map(poll => `
+        <div class="archive-item">
+            <div class="archive-info">
+                <h4>${poll.name}</h4>
+                <p>Archived: ${new Date(poll.archived_date).toLocaleDateString()} | Responses: ${poll.total_responses}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function saveCurrentPoll() {
+    const pollName = prompt('Enter a name for this poll:', `Poll ${new Date().toLocaleDateString()}`);
+    if (!pollName) return;
     
-    if (saveAdminSettings(adminSettings)) {
-        alert('Poll title saved successfully!');
-        closePollTitleSettings();
-    } else {
-        alert('Failed to save poll title');
-    }
-}
-
-function openChangePassword() {
-    document.getElementById('password-modal').style.display = 'flex';
-    document.getElementById('current-password').value = '';
-    document.getElementById('new-password').value = '';
-    document.getElementById('confirm-password').value = '';
-}
-
-function closeChangePassword() {
-    document.getElementById('password-modal').style.display = 'none';
-}
-
-function saveNewPassword() {
-    const currentPwd = document.getElementById('current-password').value;
-    const newPwd = document.getElementById('new-password').value;
-    const confirmPwd = document.getElementById('confirm-password').value;
+    const archived = JSON.parse(localStorage.getItem('archived_polls') || '[]');
+    const attending = allResponses.filter(r => r.will_attend === 'yes').length;
     
-    if (!currentPwd || !newPwd || !confirmPwd) {
-        alert('Please fill in all fields');
+    archived.push({
+        id: 'archive_' + Date.now(),
+        name: pollName,
+        archived_date: new Date().toISOString(),
+        total_responses: allResponses.length,
+        total_attendees: attending,
+        responses: [...allResponses]
+    });
+    
+    localStorage.setItem('archived_polls', JSON.stringify(archived));
+    alert('Poll archived successfully!');
+    loadArchivedPolls();
+}
+
+function startNewPoll() {
+    if (!confirm('This will clear all current responses and start a new poll. Continue?')) {
         return;
     }
     
-    if (currentPwd !== adminSettings.password) {
-        alert('Current password is incorrect');
+    localStorage.setItem('poll_responses', '[]');
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    settings.current_poll_id = 'poll_' + Date.now();
+    localStorage.setItem('admin_settings', JSON.stringify(settings));
+    
+    alert('New poll started! All responses cleared.');
+    document.getElementById('pollManagementModal').style.display = 'none';
+    location.reload();
+}
+
+// Settings
+function changePassword() {
+    const newPassword = document.getElementById('newPassword').value;
+    if (!newPassword) {
+        alert('Please enter a new password');
         return;
     }
     
-    if (newPwd !== confirmPwd) {
-        alert('New passwords do not match');
-        return;
-    }
-    
-    if (newPwd.length < 6) {
-        alert('New password must be at least 6 characters');
-        return;
-    }
-    
-    adminSettings.password = newPwd;
-    
-    if (saveAdminSettings(adminSettings)) {
-        alert('Password changed successfully!');
-        closeChangePassword();
-    } else {
-        alert('Failed to change password');
+    localStorage.setItem('admin_password', newPassword);
+    alert('Password changed successfully!');
+    document.getElementById('settingsModal').style.display = 'none';
+    document.getElementById('newPassword').value = '';
+}
+
+// Logout
+function handleLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('admin_session');
+        window.location.href = 'admin-login.html';
     }
 }
 
-// ===== EXPORT FUNCTIONS =====
-
+// Export functions
 function exportToCSV() {
-    const responses = loadPollResponses();
-    if (responses.length === 0) {
-        alert('No data to export');
-        return;
-    }
+    const headers = ['Name', 'Attendance', 'Title', 'Available Dates', 'Price', 'Paid', 'Submitted'];
+    const rows = allResponses.map(r => [
+        r.name,
+        r.will_attend === 'yes' ? 'Yes' : 'No',
+        r.title,
+        r.available_dates.join('; '),
+        calculateIndividualPrice(r).toFixed(2),
+        r.payment_status ? 'Yes' : 'No',
+        new Date(r.submitted_at).toLocaleString()
+    ]);
     
-    const prices = calculatePrices(responses);
-    
-    let csv = 'Name,Attending,Title,Available Dates,Price,Payment Status\n';
-    
-    responses.forEach(response => {
-        const price = prices[response.id] || 0;
-        const titleDisplay = {
-            'master': 'Master Student',
-            'doctoral': 'Doctoral Student',
-            'staff': 'Teachers & Staff'
-        }[response.title] || response.title;
-        const dates = response.available_dates ? response.available_dates.join('; ') : 'N/A';
-        const paymentStatus = response.payment_status ? 'Paid' : 'Unpaid';
-        
-        csv += `"${response.name}","${response.will_attend}","${titleDisplay}","${dates}",¥${price.toFixed(2)},"${paymentStatus}"\n`;
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
     });
     
     downloadFile(csv, 'poll_responses.csv', 'text/csv');
 }
 
 function exportToXLSX() {
-    alert('XLSX export requires additional library. Using CSV format instead.');
-    exportToCSV();
+    const data = allResponses.map(r => ({
+        'Name': r.name,
+        'Attendance': r.will_attend === 'yes' ? 'Yes' : 'No',
+        'Title': r.title,
+        'Available Dates': r.available_dates.join(', '),
+        'Price': calculateIndividualPrice(r).toFixed(2),
+        'Paid': r.payment_status ? 'Yes' : 'No',
+        'Submitted': new Date(r.submitted_at).toLocaleString()
+    }));
+    
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, 'Responses');
+    
+    // Add statistics sheet
+    const stats = [
+        ['Statistic', 'Value'],
+        ['Total Responses', allResponses.length],
+        ['Attending', allResponses.filter(r => r.will_attend === 'yes').length],
+        ['Not Attending', allResponses.filter(r => r.will_attend === 'no').length],
+        ['Paid', allResponses.filter(r => r.payment_status).length]
+    ];
+    const ws2 = XLSX.utils.aoa_to_sheet(stats);
+    XLSX.utils.book_append_sheet(wb, ws2, 'Statistics');
+    
+    XLSX.writeFile(wb, 'poll_responses.xlsx');
 }
 
 function exportToPDF() {
-    alert('PDF export requires additional library. Please use Print function or CSV export.');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text('Poll Responses Report', 14, 20);
+    
+    doc.setFontSize(12);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+    
+    // Statistics
+    doc.setFontSize(14);
+    doc.text('Statistics', 14, 45);
+    doc.setFontSize(11);
+    doc.text(`Total Responses: ${allResponses.length}`, 14, 53);
+    doc.text(`Attending: ${allResponses.filter(r => r.will_attend === 'yes').length}`, 14, 60);
+    doc.text(`Not Attending: ${allResponses.filter(r => r.will_attend === 'no').length}`, 14, 67);
+    
+    // Responses
+    doc.setFontSize(14);
+    doc.text('Responses', 14, 82);
+    
+    let y = 90;
+    allResponses.forEach((r, i) => {
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+        
+        doc.setFontSize(10);
+        doc.text(`${i + 1}. ${r.name} - ${r.title}`, 14, y);
+        y += 6;
+        doc.text(`   Attendance: ${r.will_attend === 'yes' ? 'Yes' : 'No'}`, 14, y);
+        y += 6;
+        const price = calculateIndividualPrice(r);
+        if (price > 0) {
+            doc.text(`   Price: ¥${price.toFixed(2)} | Paid: ${r.payment_status ? 'Yes' : 'No'}`, 14, y);
+            y += 8;
+        } else {
+            y += 5;
+        }
+    });
+    
+    doc.save('poll_responses.pdf');
 }
 
-function downloadFile(content, filename, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type: type });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
-    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
     URL.revokeObjectURL(url);
 }
-
-// ===== INITIALIZATION =====
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎛️ Admin Dashboard Loading...');
-    
-    // Check authentication
-    if (!checkAuthentication()) {
-        return;
-    }
-    
-    // Load data
-    loadAdminSettings();
-    loadPollResponses();
-    
-    // Update dashboard
-    updateDashboard();
-    
-    // Attach event listeners
-    document.getElementById('logout-btn').addEventListener('click', handleLogout);
-    document.getElementById('price-settings-btn').addEventListener('click', openPriceSettings);
-    document.getElementById('title-settings-btn').addEventListener('click', openPollTitleSettings);
-    document.getElementById('change-password-btn').addEventListener('click', openChangePassword);
-    document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
-    document.getElementById('export-xlsx-btn').addEventListener('click', exportToXLSX);
-    document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
-    document.getElementById('search-input').addEventListener('input', searchResponses);
-    
-    // Input listeners for price preview
-    ['total-cost', 'master-percentage', 'doctoral-percentage', 'staff-percentage'].forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('input', updatePricePreview);
-        }
-    });
-    
-    console.log('✅ Admin Dashboard Ready');
-});

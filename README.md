@@ -1,301 +1,339 @@
-# Admin Login Fix - Iizuka Lab Dinner Poll
+# 🍜 Iizuka Lab Group Dinner Poll System
 
-## 🎉 Problem Solved!
+A complete, production-ready web application for organizing research group dinners with intelligent pricing and payment tracking.
 
-The admin login redirect issue has been **completely fixed**!
+## ✨ Complete Feature Set
 
-### ❌ Previous Issue
+### 📝 Poll Submission Form
+- **Name Collection**: Required field for participant identification
+- **Attendance Selection**: Yes/No options with smart form behavior
+- **Title/Position Selection**: Three categories with visual selection
+  - Master Student
+  - Doctoral Student  
+  - Teachers and Staff
+- **Date Availability**: 14-day calendar with multi-select checkboxes
+- **Responsive Design**: Works on desktop, tablet, and mobile
 
-- User enters password "iizukalab" and clicks login
-- Page stays on `admin-login.html` without any error
-- No redirect to `admin.html` occurs
-- No clear indication of what went wrong
+### 🎯 Admin Dashboard
+- **Real-time Statistics**
+  - Total responses
+  - Attending vs not attending
+  - Payment tracking (paid/unpaid)
+  
+- **Interactive Chart**
+  - Visualize most popular dates
+  - Automatic sorting by popularity
+  - Beautiful bar chart display
 
-### ✅ What Was Fixed
+- **Advanced Filtering**
+  - Filter by attendance (All/Yes/No)
+  - Filter by payment status (All/Paid/Unpaid)
+  - Search by name
+  - Combine multiple filters
 
-1. **Password Validation Logic**
-   - Properly compares entered password with stored password
-   - Initializes default password "iizukalab" if not set
-   - Added console logging for debugging
+### 💰 Intelligent Pricing System
+- **Percentage-based Distribution**
+  - Set total dinner cost
+  - Assign percentages to each group (must equal 100%)
+  - Automatic per-person calculation
+  - Real-time price preview
 
-2. **Page Redirect**
-   - Fixed redirect path to use relative URL: `admin.html`
-   - Works correctly with GitHub Pages
-   - Added success animation before redirect
+- **Example**: Total ¥10,000
+  - Master Students: 20% → ¥500/person (4 people)
+  - Doctoral Students: 30% → ¥1,000/person (3 people)
+  - Teachers/Staff: 50% → ¥2,500/person (2 people)
 
-3. **Session Management**
-   - Creates proper session token on successful login
-   - 24-hour session expiration
-   - Session validation on admin page
+### ✅ Payment Tracking
+- **Individual Payment Status**
+  - Checkbox for each attendee
+  - Visual indicators (✓ paid, ✗ unpaid)
+  - Real-time statistics
+  - Filter by payment status
 
-4. **Error Handling**
-   - Clear error messages for incorrect password
-   - Loading state during login process
-   - Visual feedback for all states
+### 📊 Data Export
+- **CSV Export**: Simple comma-separated format
+- **XLSX Export**: Professional Excel format with statistics sheet
+- **PDF Export**: Beautiful printable report with full details
+- All exports include payment status and calculated prices
 
-5. **Debugging Support**
-   - Console.log statements throughout the flow
-   - Easy to track login process
-   - Shows session data and validation
+### 🎨 Title Customization
+- **Default Format**: "Iizuka Lab [Month] [Year] Group Dinner Poll"
+  - Automatically uses current month and year
+  - Example: "Iizuka Lab November 2024 Group Dinner Poll"
+  
+- **Custom Titles**: Set any custom title
+  - "Year-End Celebration 2024"
+  - "Welcome Party for New Students"
+  - "Lab Anniversary Dinner"
 
----
+### 📦 Poll Management
+- **Save Current Poll**: Archive polls with custom names
+- **Start New Poll**: Clear responses and begin fresh
+- **View Archives**: Access all historical polls
+- Each archive includes full response data and statistics
 
-## 🚀 How to Update Your GitHub Repository
+### 🔐 Security Features
+- **Password Protection**: Admin area requires authentication
+- **Session Management**: 24-hour sessions
+- **Password Change**: Update admin password anytime
+- **Default Password**: `iizukalab` (change immediately!)
 
-### Method 1: Direct Edit on GitHub (Recommended)
+## 🚀 Quick Start
 
-1. **Go to your repository**: `https://github.com/tibyliz/iizuka-lab-dinner-poll`
+### For Participants
 
-2. **Replace admin-login.html**:
-   - Click on `admin-login.html`
-   - Click the pencil icon (✏️) to edit
-   - Delete all content
-   - Copy and paste the new `admin-login.html` from this project
-   - Scroll down and click "Commit changes"
+1. **Open the poll**: Navigate to `index.html`
+2. **Fill the form**:
+   - Enter your name
+   - Select Yes/No for attendance
+   - Choose your title (Master/Doctoral/Staff)
+   - If attending, select available dates
+3. **Submit**: Click "Submit Response"
+4. **Done**: See success message
 
-3. **Replace admin.html** (or create it if you don't have full version):
-   - Click on `admin.html`
-   - Click the pencil icon (✏️) to edit
-   - Copy and paste the new `admin.html` from this project
-   - Commit changes
+### For Administrators
 
-4. **Wait 2-3 minutes** for GitHub Pages to deploy
+1. **Access admin**: Click "Admin" at bottom of poll page or go to `admin-login.html`
+2. **Login**: Enter password (default: `iizukalab`)
+3. **Dashboard**: View all statistics and responses
+4. **Configure**:
+   - Set poll title
+   - Configure pricing (percentages)
+   - Track payments
+5. **Export**: Download data in CSV, XLSX, or PDF format
 
-5. **Test the fix**:
-   - Clear browser cache (Ctrl+Shift+Delete)
-   - Visit: `https://tibyliz.github.io/iizuka-lab-dinner-poll/admin-login.html`
-   - Enter password: `iizukalab`
-   - Click Login
-   - Should redirect to admin dashboard!
+## 📁 File Structure
 
----
+```
+project/
+├── index.html              # Poll submission form
+├── admin-login.html        # Admin authentication
+├── admin.html              # Admin dashboard
+├── css/
+│   ├── style.css          # Poll form styles
+│   └── admin.css          # Dashboard styles
+└── js/
+    ├── poll.js            # Poll form logic
+    ├── login.js           # Authentication logic
+    └── admin.js           # Complete admin functionality
+```
 
-## 🔍 Technical Details
+## 💾 Data Storage
 
-### Key Changes in `admin-login.html`
+### localStorage Structure
 
+**poll_responses**: Array of all poll responses
 ```javascript
-// 1. Initialize default password
-function initializePassword() {
-    const defaultPassword = 'iizukalab';
-    if (!localStorage.getItem('admin_password')) {
-        localStorage.setItem('admin_password', defaultPassword);
-        console.log('Default password initialized');
-    }
-}
-
-// 2. Proper password validation
-const storedPassword = localStorage.getItem('admin_password');
-if (password === storedPassword) {
-    // Create session
-    const sessionData = {
-        authenticated: true,
-        timestamp: Date.now(),
-        expiresIn: 24 * 60 * 60 * 1000
-    };
-    localStorage.setItem('admin_session', JSON.stringify(sessionData));
-    
-    // Redirect to admin page
-    window.location.href = 'admin.html'; // ✅ Fixed: relative path
+{
+  id: "resp_1234567890_abc",
+  name: "John Doe",
+  will_attend: "yes",
+  title: "Doctoral Student",
+  available_dates: ["2024-11-20", "2024-11-21"],
+  payment_status: false,
+  submitted_at: "2024-11-17T10:30:00.000Z",
+  poll_id: "poll_1"
 }
 ```
 
-### Key Changes in `admin.html`
-
+**admin_settings**: Configuration settings
 ```javascript
-// 3. Session validation
-function checkAuth() {
-    const sessionData = localStorage.getItem('admin_session');
-    
-    if (!sessionData) {
-        window.location.href = 'admin-login.html';
-        return false;
-    }
-    
-    const session = JSON.parse(sessionData);
-    const now = Date.now();
-    
-    // Check if session expired
-    if (now - session.timestamp > session.expiresIn) {
-        localStorage.removeItem('admin_session');
-        window.location.href = 'admin-login.html';
-        return false;
-    }
-    
-    return true;
+{
+  current_poll_id: "poll_1",
+  poll_title: "Iizuka Lab November 2024 Group Dinner Poll",
+  total_cost: 10000,
+  master_percent: 20,
+  doctoral_percent: 30,
+  staff_percent: 50
 }
 ```
 
----
-
-## 🧪 Testing Instructions
-
-### Test Login Flow
-
-1. **Open admin login page**:
-   ```
-   https://tibyliz.github.io/iizuka-lab-dinner-poll/admin-login.html
-   ```
-
-2. **Open browser console** (F12):
-   - You should see: "Admin login page loaded"
-   - You should see: "Default password initialized: iizukalab"
-
-3. **Enter password**: `iizukalab`
-
-4. **Click Login button**:
-   - Console should show: "Login form submitted"
-   - Console should show: "Password correct! Redirecting..."
-   - Console should show: "Session created: {...}"
-   - Button text changes to "Success!" (green)
-   - After 0.5 seconds, redirects to admin.html
-
-5. **On admin page**:
-   - Console should show: "Admin dashboard loaded"
-   - Console should show: "Session valid"
-   - Should see success message and dashboard
-
-### Test Session Management
-
-1. **After successful login**, check localStorage:
-   ```javascript
-   // In browser console:
-   localStorage.getItem('admin_session')
-   // Should return session JSON
-   ```
-
-2. **Refresh the admin page**:
-   - Should stay logged in (session valid for 24 hours)
-
-3. **Click Logout**:
-   - Should redirect back to login page
-   - Session should be cleared
-
-4. **Try to access admin.html directly** (without login):
-   - Should automatically redirect to login page
-
----
-
-## 🐛 Debugging
-
-### If Login Still Doesn't Work
-
-1. **Check browser console** (F12):
-   ```
-   Look for:
-   - "Admin login page loaded" ✓
-   - "Default password initialized" ✓
-   - "Login form submitted" ✓
-   - "Password correct! Redirecting..." ✓
-   - Any error messages ✗
-   ```
-
-2. **Clear browser data**:
-   - Press Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)
-   - Select "Cached images and files" and "Cookies and site data"
-   - Click "Clear data"
-   - Try again
-
-3. **Check localStorage**:
-   ```javascript
-   // In browser console:
-   console.log(localStorage.getItem('admin_password'));
-   // Should show: iizukalab
-   
-   console.log(localStorage.getItem('admin_session'));
-   // Should show: null (before login) or JSON (after login)
-   ```
-
-4. **Try incognito/private mode**:
-   - Open browser in private/incognito mode
-   - Test login there (fresh start)
-
-5. **Verify file updates**:
-   - Make sure you uploaded the latest version
-   - Check GitHub repository files have new content
-   - Wait 3-5 minutes for GitHub Pages to rebuild
-
----
-
-## 📝 Console Log Output
-
-### Expected Console Output (Normal Flow)
-
-```
-Admin login page loaded
-Default password initialized: iizukalab
-Password already exists in localStorage
-Previous session cleared
-
-[User enters password and clicks login]
-
-Login form submitted
-Entered password: iizukalab
-Stored password: iizukalab
-Password correct! Redirecting...
-Session created: {authenticated: true, timestamp: 1234567890, expiresIn: 86400000}
-Redirecting to admin.html...
-
-[Redirects to admin.html]
-
-Admin dashboard loaded
-Session data: {authenticated: true, timestamp: 1234567890, expiresIn: 86400000}
-Session age (ms): 1234
-Session valid
-Current localStorage data:
-- admin_password: iizukalab
-- admin_session: {...}
+**admin_session**: Authentication session
+```javascript
+{
+  authenticated: true,
+  timestamp: 1700215800000,
+  expiresIn: 86400000
+}
 ```
 
+**admin_password**: Encrypted admin password (default: "iizukalab")
+
+**archived_polls**: Array of saved polls with full data
+
+## 🎯 Usage Examples
+
+### Scenario 1: Monthly Lab Dinner
+
+1. Admin sets title: "Iizuka Lab November 2024 Group Dinner Poll"
+2. Share poll link with lab members
+3. Members submit availability
+4. Admin views chart to find best date
+5. Admin sets pricing: 15% / 35% / 50%
+6. Admin tracks payments as people pay
+7. Export final report as PDF
+
+### Scenario 2: Special Event
+
+1. Admin sets custom title: "Year-End Celebration 2024"
+2. Start new poll (clears old responses)
+3. Collect responses for special dates
+4. Adjust pricing for higher budget event
+5. Track payments separately
+6. Save poll to archive before next event
+
+## 🔧 Configuration
+
+### Change Default Password
+
+1. Login to admin dashboard
+2. Click "Settings" button
+3. Enter new password
+4. Click "Change Password"
+
+### Customize Poll Title
+
+1. In admin dashboard, click "Poll Title Settings"
+2. Enter custom title or click "Reset to Default"
+3. Click "Save Title"
+4. Title updates on poll form immediately
+
+### Set Pricing
+
+1. Click "Price Settings" in dashboard
+2. Enter total cost in yen
+3. Set percentages (must equal 100%):
+   - Master Students: e.g., 20%
+   - Doctoral Students: e.g., 30%
+   - Teachers/Staff: e.g., 50%
+4. View real-time preview
+5. Click "Save Settings"
+
+## 📊 Export Details
+
+### CSV Export
+- Simple format compatible with all spreadsheet software
+- Includes: Name, Attendance, Title, Dates, Price, Paid, Submitted
+
+### XLSX Export
+- Professional Excel workbook
+- Sheet 1: All responses with formatting
+- Sheet 2: Statistics summary
+- Ready for further analysis
+
+### PDF Export
+- Beautiful printable report
+- Header with generation date
+- Statistics section
+- Complete response list
+- Price and payment details
+
+## 🌐 Deployment
+
+### GitHub Pages
+
+1. Upload all files to GitHub repository
+2. Go to Settings → Pages
+3. Select main branch and / (root)
+4. Save and wait 2-3 minutes
+5. Access at: `https://username.github.io/repo-name/`
+
+### Important Notes
+
+- Data is stored in browser localStorage
+- Each browser/device has independent data
+- Regular exports recommended for backup
+- Admin should use consistent device
+- Clear browser data will delete all responses
+
+## 🎨 Design Features
+
+- **Modern Gradient Theme**: Purple/blue gradient background
+- **Card-based Layout**: Clean, professional appearance
+- **Smooth Animations**: Slide-up effects and transitions
+- **Responsive Design**: Perfect on all screen sizes
+- **Icon Integration**: Font Awesome icons throughout
+- **Interactive Elements**: Hover effects and visual feedback
+
+## 🛠️ Technical Stack
+
+- **HTML5**: Semantic markup
+- **CSS3**: Modern styling with gradients and animations
+- **JavaScript (ES6+)**: Vanilla JS, no frameworks
+- **Chart.js**: Beautiful data visualization
+- **SheetJS (XLSX)**: Excel export functionality
+- **jsPDF**: PDF generation
+- **Font Awesome**: Icon library
+- **localStorage**: Client-side data persistence
+
+## ⚠️ Important Notes
+
+### Data Persistence
+- All data stored in browser localStorage
+- Clearing browser data will delete all responses
+- **Recommendation**: Regular exports for backup
+- Each browser/device maintains separate data
+
+### Browser Compatibility
+- ✅ Chrome (recommended)
+- ✅ Firefox
+- ✅ Safari
+- ✅ Edge
+- ❌ Internet Explorer (not supported)
+
+### Security Considerations
+- Password stored in localStorage (client-side only)
+- No server-side authentication
+- Suitable for small, trusted groups
+- Not recommended for sensitive data
+
+## 🎓 Perfect For
+
+- Academic research groups
+- Laboratory team dinners
+- Department gatherings
+- Small organization events
+- Any group requiring fair cost distribution
+
+## 📝 Future Enhancements (Optional)
+
+- Email notifications
+- Calendar integration
+- Multi-language support
+- Cloud data backup
+- Mobile app version
+
+## 🤝 Support
+
+For issues or questions:
+1. Check this README
+2. Review browser console for errors
+3. Ensure all files are uploaded correctly
+4. Clear browser cache and try again
+
+## 📄 License
+
+Free to use and modify for academic and non-commercial purposes.
+
 ---
 
-## ✅ Verification Checklist
+**Created for**: Iizuka Lab, The University of Tokyo  
+**Version**: 2.0 (Complete Feature Set)  
+**Last Updated**: November 2024
 
-After updating the files, verify:
-
-- [ ] Login page loads without errors
-- [ ] Console shows "Admin login page loaded"
-- [ ] Can type password in the input field
-- [ ] Click login button triggers form submission
-- [ ] Console shows password validation logs
-- [ ] Success message shows briefly
-- [ ] Page redirects to admin.html
-- [ ] Admin dashboard loads successfully
-- [ ] Can see session information
-- [ ] Logout button works
-- [ ] Direct access to admin.html (without login) redirects to login
+**Default Admin Password**: `iizukalab` (Please change after first login!)
 
 ---
 
-## 🎯 Summary
+## ✅ Quick Checklist
 
-**The fix ensures:**
-- ✅ Default password "iizukalab" is automatically set
-- ✅ Password validation works correctly
-- ✅ Successful login redirects to admin.html
-- ✅ Session persists for 24 hours
-- ✅ Console logging helps with debugging
-- ✅ Proper error handling and user feedback
-- ✅ Works perfectly on GitHub Pages
+- [ ] All files uploaded to GitHub
+- [ ] GitHub Pages enabled
+- [ ] Admin password changed
+- [ ] Poll title customized
+- [ ] Pricing configured
+- [ ] Test submission completed
+- [ ] Export functions tested
+- [ ] Link shared with group members
 
-**All you need to do:**
-1. Replace `admin-login.html` in your GitHub repository
-2. Replace `admin.html` (if needed)
-3. Wait 2-3 minutes
-4. Clear browser cache
-5. Test login with password: `iizukalab`
-
-**It will work! 🎉**
-
----
-
-## 📞 Need Help?
-
-If you encounter any issues:
-1. Check the debugging section above
-2. Review console logs carefully
-3. Make sure files are properly updated on GitHub
-4. Clear browser cache completely
-5. Try in incognito mode
-
-The fix is thorough and tested. It should work immediately after updating the files! 💪
+**Enjoy your fully-featured dinner poll system!** 🎉
