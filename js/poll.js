@@ -40,7 +40,7 @@ function generateDates() {
         label.className = 'date-checkbox';
         label.innerHTML = `
             <input type="checkbox" name="dates" value="${dateStr}">
-            <div class="date-custom">
+            <div class="date-card">
                 <div>${dayName}</div>
                 <div>${dateStr}</div>
             </div>
