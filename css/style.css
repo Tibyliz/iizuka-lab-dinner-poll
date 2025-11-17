@@ -221,26 +221,25 @@ input[type="password"]:focus {
     color: white;
 }
 
-.date-custom {
-    display: block;
-    padding: 12px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    text-align: center;
-    transition: all 0.3s ease;
-    background: white;
+.date-checkbox input[type="checkbox"]:checked + .date-card .day-name,
+.date-checkbox input[type="checkbox"]:checked + .date-card .date-text {
+    color: white !important;
 }
 
-.date-day {
-    font-weight: 600;
-    font-size: 14px;
-    color: #667eea;
-    margin-bottom: 4px;
+/* Date card text styling */
+.date-card .day-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #2d3748;
+    transition: color 0.3s ease;
 }
 
-.date-date {
-    font-size: 12px;
-    color: #666;
+.date-card .date-text {
+    font-size: 0.85rem;
+    margin-top: 8px;
+    color: #718096;
+    font-weight: 400;
+    transition: color 0.3s ease;
 }
 
 /* Submit Button */
