@@ -1,206 +1,335 @@
-# ⚡ Quick Start Guide
+# 🚀 快速开始指南
 
-## 🎯 30-Second Overview
+5分钟快速上手Iizuka Lab聚餐投票系统!
 
-This is a **complete dinner poll system** with pricing, payment tracking, and exports.
+## 📦 文件清单
 
-**Default Password**: `iizukalab`
-
----
-
-## 📦 Files to Upload
+确保你有以下文件:
 
 ```
-✅ index.html               (Poll form)
-✅ admin-login.html         (Login page)
-✅ admin.html               (Dashboard)
-✅ css/style.css           (Form styles)
-✅ css/admin.css           (Dashboard styles)
-✅ js/poll.js              (Form logic)
-✅ js/login.js             (Auth logic)
-✅ js/admin.js             (Dashboard logic)
+✅ index.html              # 投票表单
+✅ admin-login.html        # 管理员登录
+✅ admin.html              # 管理仪表板
+✅ css/style.css          # 表单样式
+✅ css/admin.css          # 管理页面样式
+✅ js/poll.js             # 投票逻辑
+✅ js/login.js            # 登录逻辑
+✅ js/admin.js            # 管理功能
 ```
 
----
+## 🎯 第一次使用
 
-## 🚀 3-Step Deployment
-
-### 1️⃣ Upload (5 min)
-- Go to: `github.com/tibyliz/iizuka-lab-dinner-poll`
-- Delete old files
-- Upload all 8 files
-- Keep folder structure (css/, js/)
-
-### 2️⃣ Enable Pages (1 min)
-- Settings → Pages
-- Branch: `main` → Save
-- Wait 2 minutes
-
-### 3️⃣ Test (2 min)
-- Visit: `https://tibyliz.github.io/iizuka-lab-dinner-poll/`
-- Submit test response
-- Login: password `iizukalab`
-- Change password!
-
-**Done!** 🎉
-
----
-
-## 🎛️ First-Time Setup
-
-After deployment:
-
-1. **Login**: Visit site, click "Admin" at bottom
-2. **Change Password**: Settings → New password → Save
-3. **Set Title**: Poll Title Settings → Enter or use default
-4. **Configure Pricing**: Price Settings → Enter cost & percentages
-5. **Share**: Send poll link to lab members
-
----
-
-## 📊 Features at a Glance
-
-### For Participants
-- Fill name, attendance, title, dates
-- Submit response
-- Done in 2 minutes!
-
-### For Admin
-- **View**: Dashboard with stats & chart
-- **Price**: Set percentages (e.g., 20%, 30%, 50%)
-- **Track**: Mark who paid
-- **Filter**: By attendance, payment, name
-- **Export**: CSV, XLSX, or PDF
-- **Archive**: Save polls before starting new
-
----
-
-## 💰 Pricing Example
-
+### 步骤1: 打开网站 (1分钟)
 ```
-Total: ¥10,000
-Master: 20% | Doctoral: 30% | Staff: 50%
+用浏览器打开 index.html
+```
 
-Results (with 4M, 3D, 2S):
-Master: ¥500 per person
-Doctoral: ¥1,000 per person
-Staff: ¥2,500 per person
+### 步骤2: 管理员登录 (2分钟)
+```
+1. 滚动到页面底部
+2. 点击灰色的 "Admin" 链接
+3. 输入密码: iizukalab
+4. 点击 Login
+```
+
+### 步骤3: 修改密码 (2分钟)
+```
+1. 登录后点击 "Settings"
+2. 输入当前密码: iizukalab
+3. 输入新密码 (至少6位)
+4. 确认新密码
+5. 点击 "Change Password"
+```
+
+✅ **完成!** 你已经可以开始使用了!
+
+---
+
+## ⚙️ 基础配置
+
+### 配置1: 设置投票标题 (1分钟)
+```
+1. 点击 "Title Settings"
+2. 输入标题,例如:
+   "Iizuka Lab November 2024 Group Dinner Poll"
+3. 或点击 "Reset to Default" 使用智能默认标题
+4. 点击 "Save Title"
+```
+
+### 配置2: 设置价格 (2分钟)
+```
+1. 点击 "Price Settings"
+2. 输入总费用: 10000
+3. 设置百分比:
+   - 硕士生: 20%
+   - 博士生: 30%
+   - 教师职工: 50%
+4. 查看实时预览
+5. 确认总和 = 100%
+6. 点击 "Save Settings"
 ```
 
 ---
 
-## 🔑 Important Info
+## 📝 收集回复
 
-### Default Settings
-- Password: `iizukalab`
-- Title: "Iizuka Lab November 2024 Group Dinner Poll"
-- Percentages: 20%, 30%, 50%
+### 分享给参与者
+```
+1. 分享 index.html 的链接给实验室成员
+2. 或将文件发送给他们
+```
 
-### URLs
-- Poll: `https://tibyliz.github.io/iizuka-lab-dinner-poll/`
-- Admin: `https://tibyliz.github.io/iizuka-lab-dinner-poll/admin-login.html`
+### 参与者填写流程
+```
+1. 打开链接
+2. 填写姓名
+3. 选择是否参加
+4. 选择职称 (硕士/博士/教师)
+5. 如果参加,选择可用日期
+6. 点击提交
+```
 
-### Data Storage
-- Stored in browser (localStorage)
-- Export regularly for backup
-- Use same computer for admin
-
----
-
-## ✅ Quick Checklist
-
-- [ ] Files uploaded to GitHub
-- [ ] GitHub Pages enabled
-- [ ] Site accessible
-- [ ] Test response submitted
-- [ ] Admin login works
-- [ ] Password changed
-- [ ] Title configured
-- [ ] Pricing set
-- [ ] Export tested
+### 查看回复
+```
+1. 登录管理页面
+2. 实时看到所有回复
+3. 查看图表显示最受欢迎的日期
+```
 
 ---
 
-## 🆘 Quick Troubleshooting
+## 💰 追踪付款
 
-**Can't login?**
-- Password is: `iizukalab` (all lowercase)
-- Clear browser cache
-- Try incognito mode
+### 步骤1: 查看每人应付金额
+```
+表格中的 "Price" 列显示每人需要支付的金额
+```
 
-**Styles broken?**
-- Clear cache (Ctrl+Shift+Delete)
-- Hard refresh (Ctrl+F5)
-- Check css/ folder uploaded
+### 步骤2: 标记付款状态
+```
+1. 收到款后,勾选该人的付款复选框
+2. 自动显示绿色的 ✓ 图标
+3. 顶部统计显示 "已付款/总参加人数"
+```
 
-**Data not saving?**
-- Allow cookies/localStorage
-- Don't use private mode
-- Check browser console (F12)
-
----
-
-## 📖 Full Documentation
-
-- **README.md**: Complete feature documentation
-- **DEPLOYMENT_GUIDE.md**: Detailed deployment steps
-- **FEATURES.md**: Every feature explained
-- **PROJECT_COMPLETE.md**: Project summary
+### 步骤3: 查看未付款成员
+```
+1. 点击 "Unpaid" 筛选按钮
+2. 只显示未付款的成员
+3. 方便提醒收款
+```
 
 ---
 
-## 🎯 Common Tasks
+## 🗂️ 管理投票归档
 
-### Change Poll Title
-1. Login → Poll Title Settings
-2. Enter new title or click Reset
-3. Save
+### 保存当前投票
+```
+1. 活动结束后点击 "Poll Management"
+2. 点击 "Save Current Poll to Archive"
+3. 输入名称: "November 2024 Dinner"
+4. 点击 Save
+```
 
-### Set Pricing
-1. Login → Price Settings
-2. Enter total cost
-3. Set percentages (must = 100%)
-4. Preview → Save
+### 开始新投票
+```
+1. 点击 "Poll Management"
+2. 点击 "Start New Poll"
+3. 确认操作 (会清除所有回复)
+4. 当前回复被清空,设置保持不变
+```
 
-### Track Payments
-1. View response table
-2. Check box when payment received
-3. Filter to see unpaid
-
-### Export Data
-1. Click Export XLSX (or CSV/PDF)
-2. File downloads automatically
-3. Contains all data + prices
-
-### Start New Poll
-1. Login → Poll Management
-2. Optionally "Save Current Poll"
-3. "Start New Poll" → Confirm
-4. All responses cleared
+### 查看归档
+```
+1. 点击 "Poll Management"
+2. 点击 "View Archived Polls"
+3. 看到所有历史投票
+4. 可以恢复、导出或删除
+```
 
 ---
 
-## 💡 Pro Tips
+## 📤 导出数据
 
-1. **Export Regularly**: Backup data weekly
-2. **Same Device**: Use one computer for admin
-3. **Test First**: Submit test response before sharing
-4. **Clear Instructions**: Tell participants what to expect
-5. **Check Chart**: Find most popular dates quickly
+### 导出当前投票
+```
+点击以下任一按钮:
+- "Export CSV" - 简单表格
+- "Export XLSX" - Excel文件 (推荐)
+- "Export PDF" - PDF报告
+```
+
+### 导出归档投票
+```
+1. Poll Management → View Archived Polls
+2. 找到要导出的归档
+3. 点击 "Export" 按钮
+4. 自动下载XLSX文件
+```
 
 ---
 
-## 🎊 You're Ready!
+## 🎓 完整使用流程
 
-Upload → Enable Pages → Configure → Share
+### 场景: 组织一次聚餐
 
-**Total time: 10 minutes**
+#### 第1步: 准备 (5分钟)
+```
+✅ 登录管理页面
+✅ 修改默认密码
+✅ 设置投票标题
+✅ 设置价格和百分比
+```
 
-Questions? Check **README.md** for details!
+#### 第2步: 收集 (2-3天)
+```
+✅ 分享链接给实验室成员
+✅ 等待大家提交回复
+✅ 实时查看回复情况
+```
+
+#### 第3步: 决定 (10分钟)
+```
+✅ 查看图表选择最合适的日期
+✅ 通知大家确定的日期
+✅ 查看每人的应付金额
+```
+
+#### 第4步: 收款 (1-2周)
+```
+✅ 向参与者收款
+✅ 收到款后勾选付款状态
+✅ 使用筛选查看未付款成员
+```
+
+#### 第5步: 归档 (2分钟)
+```
+✅ 活动结束后保存投票
+✅ 导出最终报告
+✅ 可以开始新投票了!
+```
 
 ---
 
-**Default Password**: `iizukalab` (Change it!)  
-**Your Site**: `https://tibyliz.github.io/iizuka-lab-dinner-poll/`
+## 💡 常用技巧
 
-**Happy polling!** 🍜✨
+### 技巧1: 快速筛选
+```
+使用组合筛选快速找到特定人群:
+- "Attending" + "Unpaid" = 需要收款的人
+- "Attending" + "Paid" = 已付款的人
+```
+
+### 技巧2: 搜索功能
+```
+在搜索框输入姓名快速定位某个人
+```
+
+### 技巧3: 实时预览
+```
+在设置价格时,会实时显示每类人员的单价
+```
+
+### 技巧4: 归档命名
+```
+使用清晰的命名:
+✅ "2024-11 Monthly Dinner"
+✅ "Year-End Celebration 2024"
+❌ "test"
+❌ "poll1"
+```
+
+---
+
+## ⚠️ 重要提示
+
+### 数据安全
+```
+⚠️ 数据存储在浏览器localStorage
+⚠️ 清除浏览器数据会丢失所有信息
+✅ 定期导出XLSX备份
+✅ 重要投票保存到归档
+```
+
+### 密码安全
+```
+⚠️ 默认密码: iizukalab
+✅ 首次登录立即修改
+✅ 定期更换密码
+✅ 不在公共电脑上使用
+```
+
+### 多设备使用
+```
+⚠️ 数据不在设备间同步
+✅ 固定用一台电脑管理
+✅ 或每次导出后在新设备导入
+```
+
+### 开始新投票
+```
+⚠️ 会清除所有当前回复
+✅ 先保存到归档
+✅ 导出XLSX报告
+✅ 然后再开始新投票
+```
+
+---
+
+## 🆘 遇到问题?
+
+### 问题1: 无法登录
+```
+解决方案:
+1. 确认密码正确: iizukalab (默认)
+2. 清除浏览器缓存
+3. 重新打开页面
+```
+
+### 问题2: 看不到数据
+```
+解决方案:
+1. 确认是否有提交回复
+2. 清除筛选条件
+3. 刷新页面
+```
+
+### 问题3: 百分比无法保存
+```
+解决方案:
+确认三个百分比总和正好是 100%
+```
+
+### 问题4: 图表不显示
+```
+解决方案:
+1. 确认至少有一个"参加"的回复
+2. 确认回复中选择了可用日期
+3. 刷新页面
+```
+
+---
+
+## 📚 更多资源
+
+- **完整文档**: 查看 README.md
+- **归档管理指南**: 查看 ARCHIVE_MANAGEMENT_GUIDE.md
+- **常见问题**: 查看 README.md 的故障排除部分
+
+---
+
+## 🎉 准备就绪!
+
+现在你已经掌握了基础使用方法,可以开始组织你们实验室的聚餐活动了!
+
+**记住三个关键点:**
+1. ✅ 首次登录修改密码
+2. ✅ 定期导出数据备份
+3. ✅ 重要投票保存到归档
+
+祝使用愉快! 🍜🥘
+
+---
+
+**默认密码**: `iizukalab`  
+**建议**: 立即修改!
