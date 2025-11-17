@@ -1,191 +1,175 @@
-// Poll Form JavaScript with localStorage
+// Poll Form JavaScript
+console.log('Poll.js loaded');
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Poll page loaded');
-    
-    // Load and set poll title
-    loadPollTitle();
-    
-    // Generate date options
-    generateDateOptions();
-    
-    // Set up event listeners
-    setupEventListeners();
-});
-
-// Load poll title from localStorage
+// Load and display poll title
 function loadPollTitle() {
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    let title = settings.poll_title || getDefaultTitle();
-    
-    // Update page title and heading
-    document.getElementById('page-title').textContent = title;
-    document.getElementById('poll-title').textContent = title;
-    
-    console.log('Poll title loaded:', title);
+    try {
+        const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+        const title = settings.pollTitle || getDefaultTitle();
+        
+        const titleElement = document.getElementById('pollTitle');
+        const pageTitleElement = document.getElementById('pageTitle');
+        
+        if (titleElement) {
+            titleElement.textContent = title;
+        }
+        if (pageTitleElement) {
+            pageTitleElement.textContent = title;
+        }
+        
+        console.log('Poll title loaded:', title);
+    } catch (error) {
+        console.error('Error loading poll title:', error);
+    }
 }
 
-// Get default title with current month and year
 function getDefaultTitle() {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
                     'July', 'August', 'September', 'October', 'November', 'December'];
     const now = new Date();
-    const month = months[now.getMonth()];
-    const year = now.getFullYear();
-    return `Iizuka Lab ${month} ${year} Group Dinner Poll`;
+    return `Iizuka Lab ${months[now.getMonth()]} ${now.getFullYear()} Group Dinner Poll`;
 }
 
-// Generate next 14 days as date options
-function generateDateOptions() {
-    const dateOptionsContainer = document.getElementById('dateOptions');
+// Generate date options (next 14 days)
+function generateDates() {
+    const container = document.getElementById('datesContainer');
+    if (!container) return;
+
+    const dates = [];
     const today = new Date();
     
     for (let i = 0; i < 14; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         
-        const dateStr = formatDate(date);
-        const dateValue = date.toISOString().split('T')[0];
+        const dateStr = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dateDisplay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         
-        const dateOption = document.createElement('label');
-        dateOption.className = 'date-option';
-        dateOption.innerHTML = `
-            <input type="checkbox" name="dates" value="${dateValue}">
-            <span class="date-label">
-                <i class="fas fa-calendar-day"></i>
-                ${dateStr}
-            </span>
-        `;
-        
-        dateOptionsContainer.appendChild(dateOption);
+        dates.push({ value: dateStr, display: `${dayName}, ${dateDisplay}` });
     }
-    
-    console.log('Generated 14 date options');
+
+    container.innerHTML = dates.map(date => `
+        <label class="date-option">
+            <input type="checkbox" name="availableDates" value="${date.value}">
+            <span>${date.display}</span>
+        </label>
+    `).join('');
+
+    console.log('Dates generated');
 }
 
-// Format date as "Mon, Nov 17"
-function formatDate(date) {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    const dayName = days[date.getDay()];
-    const monthName = months[date.getMonth()];
-    const dayNum = date.getDate();
-    
-    return `${dayName}, ${monthName} ${dayNum}`;
-}
+// Show/hide dates based on attendance
+const attendanceRadios = document.querySelectorAll('input[name="willAttend"]');
+const datesGroup = document.getElementById('datesGroup');
 
-// Set up event listeners
-function setupEventListeners() {
-    // Show/hide date selection based on attendance
-    const attendanceRadios = document.querySelectorAll('input[name="attendance"]');
-    attendanceRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            const dateGroup = document.getElementById('dateGroup');
+attendanceRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+        if (datesGroup) {
             if (this.value === 'yes') {
-                dateGroup.style.display = 'block';
-                // Make date selection required
-                const dateCheckboxes = document.querySelectorAll('input[name="dates"]');
+                datesGroup.style.display = 'block';
+                // Make dates required
+                const dateCheckboxes = document.querySelectorAll('input[name="availableDates"]');
                 dateCheckboxes.forEach(cb => cb.required = true);
             } else {
-                dateGroup.style.display = 'none';
+                datesGroup.style.display = 'none';
                 // Remove required from dates
-                const dateCheckboxes = document.querySelectorAll('input[name="dates"]');
+                const dateCheckboxes = document.querySelectorAll('input[name="availableDates"]');
                 dateCheckboxes.forEach(cb => {
                     cb.required = false;
                     cb.checked = false;
                 });
             }
-        });
+        }
     });
-    
-    // Form submission
-    const form = document.getElementById('pollForm');
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        handleFormSubmission();
-    });
-}
+});
 
 // Handle form submission
-function handleFormSubmission() {
-    console.log('Form submitted');
-    
-    // Get form data
-    const name = document.getElementById('name').value.trim();
-    const attendance = document.querySelector('input[name="attendance"]:checked').value;
-    const title = document.querySelector('input[name="title"]:checked').value;
-    
-    // Get selected dates
-    const selectedDates = [];
-    const dateCheckboxes = document.querySelectorAll('input[name="dates"]:checked');
-    dateCheckboxes.forEach(checkbox => {
-        selectedDates.push(checkbox.value);
+const pollForm = document.getElementById('pollForm');
+if (pollForm) {
+    pollForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Form submitted');
+
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        
+        // Hide previous messages
+        if (errorMessage) errorMessage.style.display = 'none';
+        if (successMessage) successMessage.style.display = 'none';
+
+        // Get form data
+        const formData = new FormData(this);
+        const name = formData.get('name');
+        const willAttend = formData.get('willAttend');
+        const title = formData.get('title');
+        const availableDates = formData.getAll('availableDates');
+
+        // Validate
+        if (!name || !willAttend || !title) {
+            if (errorMessage) {
+                errorMessage.textContent = 'Please fill in all required fields.';
+                errorMessage.style.display = 'block';
+            }
+            return;
+        }
+
+        if (willAttend === 'yes' && availableDates.length === 0) {
+            if (errorMessage) {
+                errorMessage.textContent = 'Please select at least one available date.';
+                errorMessage.style.display = 'block';
+            }
+            return;
+        }
+
+        // Create response object
+        const response = {
+            id: Date.now(),
+            name: name.trim(),
+            willAttend: willAttend,
+            title: title,
+            availableDates: willAttend === 'yes' ? availableDates : [],
+            paymentStatus: false,
+            submittedAt: new Date().toISOString()
+        };
+
+        // Save to localStorage
+        try {
+            const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+            responses.push(response);
+            localStorage.setItem('poll_responses', JSON.stringify(responses));
+            
+            console.log('Response saved:', response);
+
+            // Show success message
+            if (successMessage) {
+                successMessage.style.display = 'block';
+            }
+
+            // Reset form
+            this.reset();
+            if (datesGroup) {
+                datesGroup.style.display = 'none';
+            }
+
+            // Scroll to success message
+            if (successMessage) {
+                successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+        } catch (error) {
+            console.error('Error saving response:', error);
+            if (errorMessage) {
+                errorMessage.textContent = 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        }
     });
-    
-    // Validate dates if attending
-    if (attendance === 'yes' && selectedDates.length === 0) {
-        alert('Please select at least one available date.');
-        return;
-    }
-    
-    // Create response object
-    const response = {
-        id: generateId(),
-        name: name,
-        will_attend: attendance,
-        title: title,
-        available_dates: selectedDates,
-        payment_status: false,
-        submitted_at: new Date().toISOString(),
-        poll_id: getCurrentPollId()
-    };
-    
-    // Save to localStorage
-    saveResponse(response);
-    
-    // Show success message
-    showSuccessMessage();
 }
 
-// Generate unique ID
-function generateId() {
-    return 'resp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
-// Get current poll ID
-function getCurrentPollId() {
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    return settings.current_poll_id || 'poll_1';
-}
-
-// Save response to localStorage
-function saveResponse(response) {
-    // Get existing responses
-    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
-    
-    // Add new response
-    responses.push(response);
-    
-    // Save back to localStorage
-    localStorage.setItem('poll_responses', JSON.stringify(responses));
-    
-    console.log('Response saved:', response);
-}
-
-// Show success message
-function showSuccessMessage() {
-    const form = document.querySelector('.poll-form');
-    const successMessage = document.getElementById('successMessage');
-    
-    form.style.display = 'none';
-    successMessage.style.display = 'block';
-    
-    // Reset form after 3 seconds
-    setTimeout(() => {
-        form.reset();
-        form.style.display = 'flex';
-        successMessage.style.display = 'none';
-        document.getElementById('dateGroup').style.display = 'none';
-    }, 3000);
-}
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded');
+    loadPollTitle();
+    generateDates();
+});

@@ -1,471 +1,800 @@
-// ============================================================================
-// IIZUKA LAB DINNER POLL - ADMIN DASHBOARD
-// Fixed Version - Chart Infinite Rendering Bug Fixed
-// ============================================================================
-
+// Admin Dashboard JavaScript with Complete Error Handling
 console.log('Admin.js loaded successfully');
 
-// Global chart instance - CRITICAL: Store chart globally to prevent duplicates
-let dateChart = null;
+// Global Chart Instance
+let chartInstance = null;
 
-// ============================================================================
-// INITIALIZATION
-// ============================================================================
+// Helper function to safely get element
+function safeGetElement(id, context = 'Admin') {
+    const element = document.getElementById(id);
+    if (!element) {
+        console.warn(`${context}: Element with ID '${id}' not found`);
+    }
+    return element;
+}
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Admin page DOM loaded');
-    
-    // Check authentication
-    checkAuth();
-    
-    // Initialize data
-    initializeData();
-    
-    // Load and display data - ONLY ONCE
-    loadAndDisplayData();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    console.log('Admin initialization complete');
-});
+// Helper function to safely set text content
+function safeSetText(id, value, defaultValue = '0') {
+    const element = safeGetElement(id);
+    if (element) {
+        element.textContent = value || defaultValue;
+    }
+}
 
-// ============================================================================
-// AUTHENTICATION
-// ============================================================================
-
+// Check Authentication
 function checkAuth() {
-    const sessionStr = localStorage.getItem('admin_session');
-    
-    if (!sessionStr) {
+    const sessionData = localStorage.getItem('admin_session');
+    if (!sessionData) {
         console.log('No session found, redirecting to login');
         window.location.href = 'admin-login.html';
-        return;
+        return false;
     }
-    
+
     try {
-        const session = JSON.parse(sessionStr);
+        const session = JSON.parse(sessionData);
         const now = Date.now();
         
-        // Check if session is expired (24 hours)
-        if (now - session.timestamp > session.expiresIn) {
+        if (!session.authenticated || now > session.timestamp + session.expiresIn) {
             console.log('Session expired');
             localStorage.removeItem('admin_session');
             window.location.href = 'admin-login.html';
-            return;
+            return false;
         }
         
-        console.log('Session valid');
-    } catch (e) {
-        console.error('Session error:', e);
+        // Update session info
+        const sessionInfo = safeGetElement('sessionInfo');
+        if (sessionInfo) {
+            const hours = Math.floor((session.expiresIn - (now - session.timestamp)) / (1000 * 60 * 60));
+            sessionInfo.textContent = `Session expires in ${hours} hours`;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error checking auth:', error);
         window.location.href = 'admin-login.html';
+        return false;
     }
 }
 
-function logout() {
-    localStorage.removeItem('admin_session');
-    window.location.href = 'admin-login.html';
-}
-
-// ============================================================================
-// DATA INITIALIZATION
-// ============================================================================
-
-function initializeData() {
-    // Initialize poll responses if not exists
+// Initialize Data Storage
+function initializeStorage() {
     if (!localStorage.getItem('poll_responses')) {
         localStorage.setItem('poll_responses', JSON.stringify([]));
     }
-    
-    // Initialize admin settings if not exists
     if (!localStorage.getItem('admin_settings')) {
         const defaultSettings = {
-            password: 'iizukalab',
-            poll_title: getDefaultTitle(),
-            total_cost: 0,
-            master_percentage: 20,
-            doctoral_percentage: 30,
-            staff_percentage: 50,
-            current_poll_id: generatePollId()
+            totalCost: 0,
+            masterPercent: 20,
+            doctoralPercent: 30,
+            staffPercent: 50,
+            pollTitle: getDefaultTitle()
         };
         localStorage.setItem('admin_settings', JSON.stringify(defaultSettings));
     }
-    
-    // Initialize archived polls if not exists
     if (!localStorage.getItem('archived_polls')) {
         localStorage.setItem('archived_polls', JSON.stringify([]));
     }
 }
 
+// Get default poll title
 function getDefaultTitle() {
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December'];
+                    'July', 'August', 'September', 'October', 'November', 'December'];
     const now = new Date();
     const month = months[now.getMonth()];
     const year = now.getFullYear();
     return `Iizuka Lab ${month} ${year} Group Dinner Poll`;
 }
 
-function generatePollId() {
-    return 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
-// ============================================================================
-// LOAD AND DISPLAY DATA - CALLED ONLY ONCE
-// ============================================================================
-
-function loadAndDisplayData() {
-    console.log('Loading data...');
-    
+// Load Data
+function loadData() {
     try {
-        // Get responses
-        const responsesStr = localStorage.getItem('poll_responses');
-        const responses = responsesStr ? JSON.parse(responsesStr) : [];
-        
-        console.log('Loaded responses:', responses.length);
+        console.log('Loading data...');
+        const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+        const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
         
         // Update statistics
-        updateStatistics(responses);
+        const total = responses.length;
+        const attending = responses.filter(r => r.willAttend === 'yes').length;
+        const notAttending = total - attending;
+        const paid = responses.filter(r => r.paymentStatus === true).length;
         
-        // Render chart - ONLY ONCE with safeguard
-        renderDateChart(responses);
+        safeSetText('totalResponses', total);
+        safeSetText('attendingCount', attending);
+        safeSetText('notAttendingCount', notAttending);
+        safeSetText('paidCount', `${paid} / ${attending}`);
         
-        // Display responses table
-        displayResponses(responses);
+        // Update chart
+        updateChart(responses);
         
-    } catch (e) {
-        console.error('Error loading data:', e);
-        showNotification('Error loading data: ' + e.message, 'error');
+        // Update table
+        updateTable(responses, settings);
+        
+        console.log('Data loaded successfully');
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showError('Error loading data: ' + error.message);
     }
 }
 
-// ============================================================================
-// STATISTICS
-// ============================================================================
-
-function updateStatistics(responses) {
-    const totalResponses = responses.length;
-    const attending = responses.filter(r => r.will_attend === 'yes').length;
-    const notAttending = totalResponses - attending;
-    
-    // Count paid
-    const paid = responses.filter(r => r.payment_status === true).length;
-    
-    // Update DOM
-    document.getElementById('total-responses').textContent = totalResponses;
-    document.getElementById('attending-count').textContent = attending;
-    document.getElementById('not-attending-count').textContent = notAttending;
-    
-    // Update payment display
-    const paidDisplay = document.getElementById('paid-count');
-    if (paidDisplay) {
-        paidDisplay.textContent = `${paid} / ${totalResponses}`;
-    }
-}
-
-// ============================================================================
-// CHART RENDERING - FIXED TO PREVENT INFINITE LOOP
-// ============================================================================
-
-function renderDateChart(responses) {
-    console.log('Rendering chart (called once)...');
-    
-    // CRITICAL FIX: Destroy existing chart before creating new one
-    if (dateChart) {
-        console.log('Destroying existing chart');
-        dateChart.destroy();
-        dateChart = null;
-    }
-    
-    const canvas = document.getElementById('dateChart');
+// Update Chart
+function updateChart(responses) {
+    const canvas = safeGetElement('dateChart');
     if (!canvas) {
-        console.error('Chart canvas not found');
+        console.warn('Chart canvas not found');
         return;
     }
-    
-    // Get context
-    const ctx = canvas.getContext('2d');
-    
-    // Filter attending responses
-    const attendingResponses = responses.filter(r => r.will_attend === 'yes');
-    
+
+    // Get attending responses with dates
+    const attendingWithDates = responses.filter(r => 
+        r.willAttend === 'yes' && r.availableDates && r.availableDates.length > 0
+    );
+
+    if (attendingWithDates.length === 0) {
+        // No data - show empty chart
+        if (chartInstance) {
+            chartInstance.destroy();
+            chartInstance = null;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#999';
+        ctx.textAlign = 'center';
+        ctx.font = '16px Arial';
+        ctx.fillText('No date data available yet', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
     // Count dates
     const dateCounts = {};
-    attendingResponses.forEach(response => {
-        if (response.available_dates && Array.isArray(response.available_dates)) {
-            response.available_dates.forEach(date => {
-                dateCounts[date] = (dateCounts[date] || 0) + 1;
-            });
-        }
+    attendingWithDates.forEach(response => {
+        response.availableDates.forEach(date => {
+            dateCounts[date] = (dateCounts[date] || 0) + 1;
+        });
     });
-    
-    // Sort by count
-    const sortedDates = Object.entries(dateCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10); // Top 10 dates
-    
-    const labels = sortedDates.map(([date]) => date);
-    const data = sortedDates.map(([, count]) => count);
-    
-    console.log('Chart data prepared:', labels.length, 'dates');
-    
-    // Create chart - ONLY ONCE
-    try {
-        dateChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Number of People Available',
-                    data: data,
-                    backgroundColor: 'rgba(147, 51, 234, 0.6)',
-                    borderColor: 'rgba(147, 51, 234, 1)',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // IMPORTANT: Allow fixed height
-                plugins: {
-                    legend: {
-                        display: true
-                    },
-                    tooltip: {
-                        enabled: true
+
+    // Sort by date
+    const sortedDates = Object.keys(dateCounts).sort();
+    const counts = sortedDates.map(date => dateCounts[date]);
+
+    // Destroy old chart instance
+    if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+    }
+
+    // Create new chart
+    const ctx = canvas.getContext('2d');
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedDates,
+            datasets: [{
+                label: 'Number of People Available',
+                data: counts,
+                backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0
                     }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y + ' people available';
                         }
                     }
                 }
             }
-        });
-        console.log('Chart created successfully');
-    } catch (e) {
-        console.error('Error creating chart:', e);
-    }
-}
-
-// ============================================================================
-// DISPLAY RESPONSES TABLE
-// ============================================================================
-
-function displayResponses(responses) {
-    const tbody = document.querySelector('#responses-table tbody');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    if (responses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #999;">No responses yet</td></tr>';
-        return;
-    }
-    
-    // Get settings for price calculation
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    
-    responses.forEach((response, index) => {
-        const row = document.createElement('tr');
-        
-        // Calculate price
-        let price = 0;
-        if (response.will_attend === 'yes' && settings.total_cost > 0) {
-            price = calculateIndividualPrice(response.title, responses, settings);
         }
-        
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${escapeHtml(response.name)}</td>
-            <td><span class="badge badge-${response.will_attend === 'yes' ? 'success' : 'danger'}">${response.will_attend === 'yes' ? 'Yes' : 'No'}</span></td>
-            <td>${escapeHtml(response.title)}</td>
-            <td>${response.available_dates && response.available_dates.length > 0 ? response.available_dates.join(', ') : 'N/A'}</td>
-            <td>¥${price.toFixed(2)}</td>
-            <td>
-                <label class="payment-checkbox">
-                    <input type="checkbox" ${response.payment_status ? 'checked' : ''} onchange="togglePaymentStatus(${index})">
-                    <span class="payment-status ${response.payment_status ? 'paid' : 'unpaid'}">
-                        ${response.payment_status ? '✓ Paid' : '✗ Unpaid'}
-                    </span>
-                </label>
-            </td>
-        `;
-        
-        tbody.appendChild(row);
     });
 }
 
+// Update Table
+function updateTable(responses, settings) {
+    const tbody = safeGetElement('responsesTableBody');
+    if (!tbody) {
+        console.warn('Table body not found');
+        return;
+    }
+
+    if (responses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="no-data">No responses yet</td></tr>';
+        return;
+    }
+
+    // Calculate prices
+    const prices = calculatePrices(responses, settings);
+
+    tbody.innerHTML = responses.map((response, index) => {
+        const price = prices[response.title] || 0;
+        const paidClass = response.paymentStatus ? 'paid' : 'unpaid';
+        const paidIcon = response.paymentStatus ? 
+            '<i class="fas fa-check-circle" style="color: #43e97b;"></i>' : 
+            '<i class="fas fa-times-circle" style="color: #f5576c;"></i>';
+        
+        return `
+            <tr>
+                <td>${escapeHtml(response.name)}</td>
+                <td>
+                    <span class="badge badge-${response.willAttend === 'yes' ? 'success' : 'danger'}">
+                        ${response.willAttend === 'yes' ? 'Yes' : 'No'}
+                    </span>
+                </td>
+                <td>${escapeHtml(response.title)}</td>
+                <td>${response.availableDates ? response.availableDates.join(', ') : 'N/A'}</td>
+                <td class="price-cell">¥${price.toFixed(2)}</td>
+                <td class="${paidClass}">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               class="payment-checkbox" 
+                               data-index="${index}" 
+                               ${response.paymentStatus ? 'checked' : ''}>
+                        ${paidIcon}
+                    </label>
+                </td>
+                <td>
+                    <button class="btn-icon btn-delete" data-index="${index}" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Attach event listeners
+    attachTableEventListeners();
+}
+
+// Calculate Prices
+function calculatePrices(responses, settings) {
+    const totalCost = parseFloat(settings.totalCost) || 0;
+    const masterPercent = parseFloat(settings.masterPercent) || 0;
+    const doctoralPercent = parseFloat(settings.doctoralPercent) || 0;
+    const staffPercent = parseFloat(settings.staffPercent) || 0;
+
+    if (totalCost === 0) {
+        return { 'Master Student': 0, 'Doctoral Student': 0, 'Teachers and Staff': 0 };
+    }
+
+    // Count attending people by title
+    const attending = responses.filter(r => r.willAttend === 'yes');
+    const masterCount = attending.filter(r => r.title === 'Master Student').length;
+    const doctoralCount = attending.filter(r => r.title === 'Doctoral Student').length;
+    const staffCount = attending.filter(r => r.title === 'Teachers and Staff').length;
+
+    // Calculate prices
+    const masterPrice = masterCount > 0 ? (totalCost * masterPercent / 100) / masterCount : 0;
+    const doctoralPrice = doctoralCount > 0 ? (totalCost * doctoralPercent / 100) / doctoralCount : 0;
+    const staffPrice = staffCount > 0 ? (totalCost * staffPercent / 100) / staffCount : 0;
+
+    return {
+        'Master Student': masterPrice,
+        'Doctoral Student': doctoralPrice,
+        'Teachers and Staff': staffPrice
+    };
+}
+
+// Attach Table Event Listeners
+function attachTableEventListeners() {
+    // Payment checkboxes
+    const checkboxes = document.querySelectorAll('.payment-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const index = parseInt(this.dataset.index);
+            updatePaymentStatus(index, this.checked);
+        });
+    });
+
+    // Delete buttons
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const index = parseInt(this.dataset.index);
+            if (confirm('Are you sure you want to delete this response?')) {
+                deleteResponse(index);
+            }
+        });
+    });
+}
+
+// Update Payment Status
+function updatePaymentStatus(index, paid) {
+    try {
+        const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+        if (responses[index]) {
+            responses[index].paymentStatus = paid;
+            localStorage.setItem('poll_responses', JSON.stringify(responses));
+            loadData();
+        }
+    } catch (error) {
+        console.error('Error updating payment status:', error);
+        showError('Failed to update payment status');
+    }
+}
+
+// Delete Response
+function deleteResponse(index) {
+    try {
+        const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+        responses.splice(index, 1);
+        localStorage.setItem('poll_responses', JSON.stringify(responses));
+        loadData();
+        showSuccess('Response deleted successfully');
+    } catch (error) {
+        console.error('Error deleting response:', error);
+        showError('Failed to delete response');
+    }
+}
+
+// Escape HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-function calculateIndividualPrice(title, responses, settings) {
-    // Count by title
-    const attendingByTitle = {
-        'Master Student': 0,
-        'Doctoral Student': 0,
-        'Teachers and Staff': 0
-    };
+// Show Error
+function showError(message) {
+    alert('Error: ' + message);
+}
+
+// Show Success
+function showSuccess(message) {
+    alert('Success: ' + message);
+}
+
+// Modal Functions
+function openModal(modalId) {
+    const modal = safeGetElement(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = safeGetElement(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Initialize Modals
+function initializeModals() {
+    const modals = ['pollTitleModal', 'priceModal', 'pollManagementModal', 'settingsModal'];
     
-    responses.forEach(r => {
-        if (r.will_attend === 'yes') {
-            attendingByTitle[r.title] = (attendingByTitle[r.title] || 0) + 1;
+    modals.forEach(modalId => {
+        const modal = safeGetElement(modalId);
+        if (modal) {
+            const closeBtn = modal.querySelector('.close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => closeModal(modalId));
+            }
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal(modalId);
+                }
+            });
         }
     });
-    
-    const totalCost = settings.total_cost || 0;
-    const masterPercentage = settings.master_percentage || 20;
-    const doctoralPercentage = settings.doctoral_percentage || 30;
-    const staffPercentage = settings.staff_percentage || 50;
-    
-    // Calculate price per person for each category
-    const prices = {
-        'Master Student': attendingByTitle['Master Student'] > 0 
-            ? (totalCost * masterPercentage / 100) / attendingByTitle['Master Student'] 
-            : 0,
-        'Doctoral Student': attendingByTitle['Doctoral Student'] > 0 
-            ? (totalCost * doctoralPercentage / 100) / attendingByTitle['Doctoral Student'] 
-            : 0,
-        'Teachers and Staff': attendingByTitle['Teachers and Staff'] > 0 
-            ? (totalCost * staffPercentage / 100) / attendingByTitle['Teachers and Staff'] 
-            : 0
-    };
-    
-    return prices[title] || 0;
 }
 
-// ============================================================================
-// PAYMENT STATUS TOGGLE
-// ============================================================================
+// Poll Title Functions
+function initializePollTitle() {
+    const btn = safeGetElement('pollTitleBtn');
+    const input = safeGetElement('pollTitleInput');
+    const resetBtn = safeGetElement('resetTitleBtn');
+    const saveBtn = safeGetElement('saveTitleBtn');
 
-function togglePaymentStatus(index) {
-    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
-    
-    if (index >= 0 && index < responses.length) {
-        responses[index].payment_status = !responses[index].payment_status;
-        localStorage.setItem('poll_responses', JSON.stringify(responses));
-        
-        // Refresh display
-        loadAndDisplayData();
-        
-        showNotification('Payment status updated', 'success');
-    }
-}
-
-// ============================================================================
-// EVENT LISTENERS SETUP
-// ============================================================================
-
-function setupEventListeners() {
-    // Logout button
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', logout);
-    }
-    
-    // Price settings button
-    const priceSettingsBtn = document.getElementById('price-settings-btn');
-    if (priceSettingsBtn) {
-        priceSettingsBtn.addEventListener('click', openPriceSettings);
-    }
-    
-    // Poll title settings button
-    const titleSettingsBtn = document.getElementById('title-settings-btn');
-    if (titleSettingsBtn) {
-        titleSettingsBtn.addEventListener('click', openTitleSettings);
-    }
-    
-    // Export buttons
-    const exportCsvBtn = document.getElementById('export-csv-btn');
-    if (exportCsvBtn) {
-        exportCsvBtn.addEventListener('click', exportToCSV);
-    }
-    
-    const exportXlsxBtn = document.getElementById('export-xlsx-btn');
-    if (exportXlsxBtn) {
-        exportXlsxBtn.addEventListener('click', exportToXLSX);
-    }
-    
-    const exportPdfBtn = document.getElementById('export-pdf-btn');
-    if (exportPdfBtn) {
-        exportPdfBtn.addEventListener('click', exportToPDF);
-    }
-    
-    // Search
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', handleSearch);
-    }
-    
-    // Filters
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            applyFilters();
+    if (btn) {
+        btn.addEventListener('click', () => {
+            const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+            if (input) {
+                input.value = settings.pollTitle || getDefaultTitle();
+            }
+            openModal('pollTitleModal');
         });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            if (input) {
+                input.value = getDefaultTitle();
+            }
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const title = input ? input.value.trim() : '';
+            if (title) {
+                const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+                settings.pollTitle = title;
+                localStorage.setItem('admin_settings', JSON.stringify(settings));
+                closeModal('pollTitleModal');
+                showSuccess('Poll title updated successfully');
+            } else {
+                showError('Please enter a poll title');
+            }
+        });
+    }
+}
+
+// Price Settings Functions
+function initializePriceSettings() {
+    const btn = safeGetElement('priceSettingsBtn');
+    const saveBtn = safeGetElement('savePriceBtn');
+    const totalInput = safeGetElement('totalCostInput');
+    const masterInput = safeGetElement('masterPercent');
+    const doctoralInput = safeGetElement('doctoralPercent');
+    const staffInput = safeGetElement('staffPercent');
+
+    if (btn) {
+        btn.addEventListener('click', () => {
+            const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+            if (totalInput) totalInput.value = settings.totalCost || '';
+            if (masterInput) masterInput.value = settings.masterPercent || 20;
+            if (doctoralInput) doctoralInput.value = settings.doctoralPercent || 30;
+            if (staffInput) staffInput.value = settings.staffPercent || 50;
+            updatePercentageTotal();
+            updatePricePreview();
+            openModal('priceModal');
+        });
+    }
+
+    // Update percentage total on input
+    [masterInput, doctoralInput, staffInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', () => {
+                updatePercentageTotal();
+                updatePricePreview();
+            });
+        }
     });
+
+    if (totalInput) {
+        totalInput.addEventListener('input', updatePricePreview);
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const total = parseFloat(totalInput?.value) || 0;
+            const master = parseFloat(masterInput?.value) || 0;
+            const doctoral = parseFloat(doctoralInput?.value) || 0;
+            const staff = parseFloat(staffInput?.value) || 0;
+
+            if (master + doctoral + staff !== 100) {
+                showError('Percentages must add up to 100%');
+                return;
+            }
+
+            const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+            settings.totalCost = total;
+            settings.masterPercent = master;
+            settings.doctoralPercent = doctoral;
+            settings.staffPercent = staff;
+            localStorage.setItem('admin_settings', JSON.stringify(settings));
+            
+            closeModal('priceModal');
+            loadData();
+            showSuccess('Price settings saved successfully');
+        });
+    }
 }
 
-// ============================================================================
-// SETTINGS MODALS
-// ============================================================================
-
-function openPriceSettings() {
-    // Implementation for price settings modal
-    alert('Price Settings: Please refer to the documentation for implementation details.');
-}
-
-function openTitleSettings() {
-    // Implementation for title settings modal
-    alert('Title Settings: Please refer to the documentation for implementation details.');
-}
-
-// ============================================================================
-// EXPORT FUNCTIONS
-// ============================================================================
-
-function exportToCSV() {
-    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+function updatePercentageTotal() {
+    const master = parseFloat(safeGetElement('masterPercent')?.value) || 0;
+    const doctoral = parseFloat(safeGetElement('doctoralPercent')?.value) || 0;
+    const staff = parseFloat(safeGetElement('staffPercent')?.value) || 0;
+    const total = master + doctoral + staff;
     
-    if (responses.length === 0) {
-        showNotification('No data to export', 'warning');
+    const element = safeGetElement('percentageTotal');
+    if (element) {
+        element.textContent = `Total: ${total}%`;
+        element.className = 'percentage-total ' + (total === 100 ? 'valid' : 'invalid');
+    }
+}
+
+function updatePricePreview() {
+    const totalCost = parseFloat(safeGetElement('totalCostInput')?.value) || 0;
+    const master = parseFloat(safeGetElement('masterPercent')?.value) || 0;
+    const doctoral = parseFloat(safeGetElement('doctoralPercent')?.value) || 0;
+    const staff = parseFloat(safeGetElement('staffPercent')?.value) || 0;
+
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    const attending = responses.filter(r => r.willAttend === 'yes');
+    const masterCount = attending.filter(r => r.title === 'Master Student').length;
+    const doctoralCount = attending.filter(r => r.title === 'Doctoral Student').length;
+    const staffCount = attending.filter(r => r.title === 'Teachers and Staff').length;
+
+    const masterPrice = masterCount > 0 ? (totalCost * master / 100) / masterCount : 0;
+    const doctoralPrice = doctoralCount > 0 ? (totalCost * doctoral / 100) / doctoralCount : 0;
+    const staffPrice = staffCount > 0 ? (totalCost * staff / 100) / staffCount : 0;
+
+    const preview = safeGetElement('pricePreviewContent');
+    if (preview) {
+        preview.innerHTML = `
+            <div class="preview-item">
+                <span>Master Students (${masterCount} people):</span>
+                <strong>¥${masterPrice.toFixed(2)} per person</strong>
+            </div>
+            <div class="preview-item">
+                <span>Doctoral Students (${doctoralCount} people):</span>
+                <strong>¥${doctoralPrice.toFixed(2)} per person</strong>
+            </div>
+            <div class="preview-item">
+                <span>Teachers/Staff (${staffCount} people):</span>
+                <strong>¥${staffPrice.toFixed(2)} per person</strong>
+            </div>
+        `;
+    }
+}
+
+// Poll Management Functions
+function initializePollManagement() {
+    const btn = safeGetElement('pollManagementBtn');
+    const saveBtn = safeGetElement('saveCurrentPollBtn');
+    const newBtn = safeGetElement('startNewPollBtn');
+
+    if (btn) {
+        btn.addEventListener('click', () => {
+            loadArchives();
+            openModal('pollManagementModal');
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveCurrentPoll);
+    }
+
+    if (newBtn) {
+        newBtn.addEventListener('click', startNewPoll);
+    }
+}
+
+function saveCurrentPoll() {
+    const nameInput = safeGetElement('archiveName');
+    const name = nameInput ? nameInput.value.trim() : '';
+    
+    if (!name) {
+        showError('Please enter a name for the archived poll');
         return;
     }
+
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    const archives = JSON.parse(localStorage.getItem('archived_polls') || '[]');
     
-    let csv = 'Name,Will Attend,Title,Available Dates,Price,Payment Status\n';
-    
-    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
-    
-    responses.forEach(response => {
-        const price = response.will_attend === 'yes' 
-            ? calculateIndividualPrice(response.title, responses, settings) 
-            : 0;
-        
-        csv += `"${response.name}",`;
-        csv += `"${response.will_attend}",`;
-        csv += `"${response.title}",`;
-        csv += `"${response.available_dates ? response.available_dates.join('; ') : 'N/A'}",`;
-        csv += `"¥${price.toFixed(2)}",`;
-        csv += `"${response.payment_status ? 'Paid' : 'Unpaid'}"\n`;
+    archives.push({
+        id: Date.now(),
+        name: name,
+        date: new Date().toISOString(),
+        responses: responses,
+        totalResponses: responses.length,
+        attending: responses.filter(r => r.willAttend === 'yes').length
     });
     
-    downloadFile(csv, 'poll_responses.csv', 'text/csv');
-    showNotification('Exported to CSV successfully', 'success');
+    localStorage.setItem('archived_polls', JSON.stringify(archives));
+    if (nameInput) nameInput.value = '';
+    loadArchives();
+    showSuccess('Poll archived successfully');
 }
 
-function exportToXLSX() {
-    showNotification('XLSX export requires external library. Please use CSV export.', 'info');
+function startNewPoll() {
+    if (confirm('Are you sure? This will clear all current responses. Make sure you have saved the current poll if needed.')) {
+        localStorage.setItem('poll_responses', JSON.stringify([]));
+        loadData();
+        closeModal('pollManagementModal');
+        showSuccess('New poll started successfully');
+    }
 }
 
-function exportToPDF() {
-    showNotification('PDF export requires external library. Please use CSV export.', 'info');
+function loadArchives() {
+    const container = safeGetElement('archivesList');
+    if (!container) return;
+
+    const archives = JSON.parse(localStorage.getItem('archived_polls') || '[]');
+    
+    if (archives.length === 0) {
+        container.innerHTML = '<p>No archived polls</p>';
+        return;
+    }
+
+    container.innerHTML = archives.map(archive => `
+        <div class="archive-item">
+            <h4>${escapeHtml(archive.name)}</h4>
+            <p>Date: ${new Date(archive.date).toLocaleDateString()}</p>
+            <p>Responses: ${archive.totalResponses} (${archive.attending} attending)</p>
+        </div>
+    `).join('');
+}
+
+// Settings Functions
+function initializeSettings() {
+    const btn = safeGetElement('settingsBtn');
+    const changePasswordBtn = safeGetElement('changePasswordBtn');
+
+    if (btn) {
+        btn.addEventListener('click', () => openModal('settingsModal'));
+    }
+
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', changePassword);
+    }
+}
+
+function changePassword() {
+    const currentInput = safeGetElement('currentPassword');
+    const newInput = safeGetElement('newPassword');
+    const confirmInput = safeGetElement('confirmPassword');
+
+    const current = currentInput ? currentInput.value : '';
+    const newPass = newInput ? newInput.value : '';
+    const confirm = confirmInput ? confirmInput.value : '';
+
+    const storedPassword = localStorage.getItem('admin_password') || 'iizukalab';
+
+    if (current !== storedPassword) {
+        showError('Current password is incorrect');
+        return;
+    }
+
+    if (newPass.length < 6) {
+        showError('New password must be at least 6 characters');
+        return;
+    }
+
+    if (newPass !== confirm) {
+        showError('New passwords do not match');
+        return;
+    }
+
+    localStorage.setItem('admin_password', newPass);
+    closeModal('settingsModal');
+    if (currentInput) currentInput.value = '';
+    if (newInput) newInput.value = '';
+    if (confirmInput) confirmInput.value = '';
+    showSuccess('Password changed successfully');
+}
+
+// Logout
+function initializeLogout() {
+    const btn = safeGetElement('logoutBtn');
+    if (btn) {
+        btn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('admin_session');
+                window.location.href = 'admin-login.html';
+            }
+        });
+    }
+}
+
+// Filter and Search Functions
+function initializeFilters() {
+    const searchInput = safeGetElement('searchInput');
+    const attendanceFilter = safeGetElement('attendanceFilter');
+    const paymentFilter = safeGetElement('paymentFilter');
+
+    [searchInput, attendanceFilter, paymentFilter].forEach(element => {
+        if (element) {
+            element.addEventListener('input', applyFilters);
+            element.addEventListener('change', applyFilters);
+        }
+    });
+}
+
+function applyFilters() {
+    const searchInput = safeGetElement('searchInput');
+    const attendanceFilter = safeGetElement('attendanceFilter');
+    const paymentFilter = safeGetElement('paymentFilter');
+
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const attendanceValue = attendanceFilter ? attendanceFilter.value : 'all';
+    const paymentValue = paymentFilter ? paymentFilter.value : 'all';
+
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+
+    const filtered = responses.filter(response => {
+        // Search filter
+        if (searchTerm && !response.name.toLowerCase().includes(searchTerm)) {
+            return false;
+        }
+
+        // Attendance filter
+        if (attendanceValue === 'attending' && response.willAttend !== 'yes') {
+            return false;
+        }
+        if (attendanceValue === 'not-attending' && response.willAttend !== 'no') {
+            return false;
+        }
+
+        // Payment filter
+        if (paymentValue === 'paid' && !response.paymentStatus) {
+            return false;
+        }
+        if (paymentValue === 'unpaid' && response.paymentStatus) {
+            return false;
+        }
+
+        return true;
+    });
+
+    updateTable(filtered, settings);
+}
+
+// Export Functions
+function initializeExports() {
+    const csvBtn = safeGetElement('exportCsvBtn');
+    const xlsxBtn = safeGetElement('exportXlsxBtn');
+    const pdfBtn = safeGetElement('exportPdfBtn');
+
+    if (csvBtn) {
+        csvBtn.addEventListener('click', exportCSV);
+    }
+    if (xlsxBtn) {
+        xlsxBtn.addEventListener('click', exportXLSX);
+    }
+    if (pdfBtn) {
+        pdfBtn.addEventListener('click', exportPDF);
+    }
+}
+
+function exportCSV() {
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    const prices = calculatePrices(responses, settings);
+
+    let csv = 'Name,Attendance,Title,Available Dates,Price,Paid\n';
+    
+    responses.forEach(r => {
+        const price = prices[r.title] || 0;
+        const dates = r.availableDates ? r.availableDates.join('; ') : '';
+        csv += `"${r.name}","${r.willAttend}","${r.title}","${dates}","${price.toFixed(2)}","${r.paymentStatus ? 'Yes' : 'No'}"\n`;
+    });
+
+    downloadFile(csv, 'poll-responses.csv', 'text/csv');
+}
+
+function exportXLSX() {
+    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
+    const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
+    const prices = calculatePrices(responses, settings);
+
+    const data = responses.map(r => ({
+        Name: r.name,
+        Attendance: r.willAttend,
+        Title: r.title,
+        'Available Dates': r.availableDates ? r.availableDates.join(', ') : '',
+        Price: prices[r.title] || 0,
+        Paid: r.paymentStatus ? 'Yes' : 'No'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Responses');
+    XLSX.writeFile(wb, 'poll-responses.xlsx');
+}
+
+function exportPDF() {
+    showError('PDF export requires jsPDF library. Please use XLSX or CSV export.');
 }
 
 function downloadFile(content, filename, type) {
@@ -474,88 +803,34 @@ function downloadFile(content, filename, type) {
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
 
-// ============================================================================
-// SEARCH AND FILTER
-// ============================================================================
-
-function handleSearch() {
-    applyFilters();
-}
-
-function applyFilters() {
-    const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
-    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+// Initialize Everything
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded');
     
-    const responses = JSON.parse(localStorage.getItem('poll_responses') || '[]');
-    
-    let filtered = responses;
-    
-    // Apply search
-    if (searchTerm) {
-        filtered = filtered.filter(r => r.name.toLowerCase().includes(searchTerm));
+    // Check authentication first
+    if (!checkAuth()) {
+        return;
     }
-    
-    // Apply filter
-    if (activeFilter !== 'all') {
-        if (activeFilter === 'attending') {
-            filtered = filtered.filter(r => r.will_attend === 'yes');
-        } else if (activeFilter === 'not-attending') {
-            filtered = filtered.filter(r => r.will_attend === 'no');
-        } else if (activeFilter === 'paid') {
-            filtered = filtered.filter(r => r.payment_status === true);
-        } else if (activeFilter === 'unpaid') {
-            filtered = filtered.filter(r => r.payment_status === false);
-        }
-    }
-    
-    displayResponses(filtered);
-}
 
-// ============================================================================
-// NOTIFICATIONS
-// ============================================================================
+    // Initialize storage
+    initializeStorage();
 
-function showNotification(message, type = 'info') {
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-        color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        animation: slideIn 0.3s ease-out;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
-}
+    // Initialize all components
+    initializeModals();
+    initializePollTitle();
+    initializePriceSettings();
+    initializePollManagement();
+    initializeSettings();
+    initializeLogout();
+    initializeFilters();
+    initializeExports();
 
-// ============================================================================
-// Make functions global for inline event handlers
-// ============================================================================
+    // Load initial data
+    loadData();
 
-window.togglePaymentStatus = togglePaymentStatus;
-window.logout = logout;
-
-console.log('Admin.js fully loaded - Chart bug fixed!');
+    console.log('Admin dashboard initialized successfully');
+});

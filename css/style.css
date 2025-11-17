@@ -1,4 +1,5 @@
-/* Global Styles */
+/* Poll Form and Login Page CSS */
+
 * {
     margin: 0;
     padding: 0;
@@ -6,70 +7,61 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    line-height: 1.6;
 }
 
-.container {
+/* Containers */
+.poll-container,
+.login-container {
     width: 100%;
     max-width: 700px;
     margin: 0 auto;
 }
 
-/* Card Styles */
-.poll-card, .login-card {
+.poll-box,
+.login-box {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
     padding: 40px;
-    animation: slideUp 0.5s ease;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
 }
 
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Header */
-.poll-header, .login-header {
+/* Headers */
+.poll-header,
+.login-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
-.header-icon {
-    font-size: 3rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.poll-header i,
+.login-header i {
+    font-size: 48px;
+    color: #667eea;
     margin-bottom: 15px;
 }
 
-h1 {
-    color: #2d3748;
-    font-size: 2rem;
-    font-weight: 700;
+.poll-header h1,
+.login-header h1 {
+    font-size: 28px;
+    color: #333;
     margin-bottom: 10px;
 }
 
-.subtitle {
-    color: #718096;
-    font-size: 0.95rem;
+.poll-header p,
+.login-header p {
+    color: #666;
+    font-size: 16px;
 }
 
-/* Form Styles */
-.poll-form, .login-form {
+/* Forms */
+.poll-form,
+.login-form {
     display: flex;
     flex-direction: column;
     gap: 25px;
@@ -82,56 +74,54 @@ h1 {
 }
 
 .form-group label {
-    color: #2d3748;
     font-weight: 600;
-    font-size: 0.95rem;
+    color: #333;
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: 16px;
 }
 
 .form-group label i {
     color: #667eea;
 }
 
-.required {
-    color: #e53e3e;
-}
-
+/* Text Inputs */
 input[type="text"],
-input[type="password"],
-input[type="number"] {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #e2e8f0;
+input[type="password"] {
+    padding: 15px;
+    border: 2px solid #e0e0e0;
     border-radius: 10px;
-    font-size: 1rem;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.3s ease;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    outline: none;
 }
 
 input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="number"]:focus {
-    outline: none;
+input[type="password"]:focus {
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.password-input-wrapper {
+/* Password Input with Toggle */
+.password-input {
     position: relative;
-    display: flex;
-    align-items: center;
+}
+
+.password-input input {
+    width: 100%;
+    padding-right: 50px;
 }
 
 .toggle-password {
     position: absolute;
-    right: 12px;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
-    color: #718096;
+    color: #999;
     cursor: pointer;
-    font-size: 1.1rem;
+    font-size: 18px;
     transition: color 0.3s;
 }
 
@@ -139,51 +129,48 @@ input[type="number"]:focus {
     color: #667eea;
 }
 
-/* Radio Groups */
+/* Radio Buttons */
 .radio-group {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.radio-option {
+.radio-label {
     display: flex;
     align-items: center;
+    gap: 10px;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
     cursor: pointer;
+    transition: all 0.3s;
 }
 
-.radio-option input[type="radio"] {
-    margin-right: 12px;
+.radio-label:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+}
+
+.radio-label input[type="radio"] {
     width: 20px;
     height: 20px;
     cursor: pointer;
 }
 
-.radio-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1rem;
-    color: #2d3748;
-    padding: 12px 20px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    width: 100%;
-    transition: all 0.3s ease;
+.radio-label input[type="radio"]:checked + span,
+.radio-label:has(input[type="radio"]:checked) {
+    color: #667eea;
+    font-weight: 600;
 }
 
-.radio-option input[type="radio"]:checked + .radio-label {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-color: transparent;
+.radio-label:has(input[type="radio"]:checked) {
+    border-color: #667eea;
+    background: #f8f9ff;
 }
 
-.radio-label i {
-    font-size: 1.2rem;
-}
-
-/* Title Selection */
-.title-selection {
+/* Title Options */
+.title-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 15px;
@@ -198,190 +185,206 @@ input[type="number"]:focus {
 }
 
 .title-card {
+    padding: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     gap: 10px;
-    padding: 20px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    text-align: center;
 }
 
 .title-card i {
-    font-size: 2rem;
-    color: #667eea;
+    font-size: 32px;
+    color: #999;
 }
 
-.title-text {
-    font-size: 0.9rem;
-    color: #2d3748;
+.title-card span {
     font-weight: 500;
+    color: #666;
 }
 
-.title-option input[type="radio"]:checked + .title-card {
+.title-option:hover .title-card {
+    border-color: #667eea;
+    background: #f8f9ff;
+}
+
+.title-option input[type="radio"]:checked ~ .title-card {
+    border-color: #667eea;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: transparent;
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
 }
 
-.title-option input[type="radio"]:checked + .title-card i,
-.title-option input[type="radio"]:checked + .title-card .title-text {
+.title-option input[type="radio"]:checked ~ .title-card i,
+.title-option input[type="radio"]:checked ~ .title-card span {
     color: white;
 }
 
 /* Date Options */
-.date-options {
+.dates-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 10px;
 }
 
 .date-option {
     display: flex;
     align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
     cursor: pointer;
+    transition: all 0.3s;
+}
+
+.date-option:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
 }
 
 .date-option input[type="checkbox"] {
-    margin-right: 10px;
     width: 18px;
     height: 18px;
     cursor: pointer;
 }
 
-.date-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 15px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    width: 100%;
-    transition: all 0.3s ease;
+.date-option:has(input[type="checkbox"]:checked) {
+    border-color: #667eea;
+    background: #f8f9ff;
 }
 
-.date-option input[type="checkbox"]:checked + .date-label {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-color: transparent;
+.date-option span {
+    font-size: 14px;
+    color: #666;
+}
+
+.date-option:has(input[type="checkbox"]:checked) span {
+    color: #667eea;
+    font-weight: 600;
 }
 
 /* Submit Button */
-.submit-btn {
+.btn-submit {
+    padding: 16px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 15px 30px;
     border: none;
     border-radius: 10px;
-    font-size: 1.1rem;
+    font-size: 18px;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    transition: all 0.3s ease;
-    margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-.submit-btn:hover {
+.btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
-.submit-btn:active {
+.btn-submit:active {
     transform: translateY(0);
 }
 
-/* Success Message */
+/* Messages */
+.error-message,
 .success-message {
-    text-align: center;
-    padding: 30px;
-    animation: slideUp 0.5s ease;
+    padding: 15px;
+    border-radius: 10px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
 }
 
 .success-message i {
-    font-size: 4rem;
-    color: #48bb78;
-    margin-bottom: 20px;
+    font-size: 20px;
 }
 
-.success-message h3 {
-    color: #2d3748;
-    font-size: 1.5rem;
-    margin-bottom: 10px;
+/* Scrollbar for dates */
+.dates-container::-webkit-scrollbar {
+    width: 8px;
 }
 
-.success-message p {
-    color: #718096;
+.dates-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
 }
 
-/* Error Message */
-.error-message {
-    background: #fed7d7;
-    color: #c53030;
-    padding: 12px 15px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
+.dates-container::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
 }
 
-/* Loading Message */
-.loading-message {
-    text-align: center;
-    color: #667eea;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 0.95rem;
-}
-
-/* Login Footer */
-.login-footer {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.login-footer a {
-    color: #667eea;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    transition: color 0.3s;
-}
-
-.login-footer a:hover {
-    color: #764ba2;
+.dates-container::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .poll-card, .login-card {
-        padding: 30px 20px;
+    .poll-box,
+    .login-box {
+        padding: 25px;
     }
 
-    h1 {
-        font-size: 1.5rem;
+    .poll-header h1,
+    .login-header h1 {
+        font-size: 24px;
     }
 
-    .title-selection {
+    .poll-header i,
+    .login-header i {
+        font-size: 40px;
+    }
+
+    .title-options {
         grid-template-columns: 1fr;
     }
 
-    .date-options {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    .dates-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .poll-box,
+    .login-box {
+        padding: 20px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+    }
+
+    .btn-submit {
+        font-size: 16px;
     }
 }

@@ -3,109 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Iizuka Lab Group Dinner Poll</title>
+    <title id="pageTitle">Research Group Dinner Poll</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="poll-card">
+    <div class="poll-container">
+        <div class="poll-box">
             <div class="poll-header">
-                <i class="fas fa-utensils header-icon"></i>
-                <h1 id="poll-title">Iizuka Lab Group Dinner Poll</h1>
-                <p class="subtitle">Please fill out your availability for our group dinner</p>
+                <i class="fas fa-utensils"></i>
+                <h1 id="pollTitle">Research Group Dinner Poll</h1>
+                <p>Please fill out this form to help us plan the dinner</p>
             </div>
 
             <form id="pollForm" class="poll-form">
-                <!-- Name Input -->
+                <!-- Name -->
                 <div class="form-group">
                     <label for="name">
-                        <i class="fas fa-user"></i>
-                        Your Name <span class="required">*</span>
+                        <i class="fas fa-user"></i> Your Name *
                     </label>
-                    <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
                 </div>
 
-                <!-- Attendance Selection -->
+                <!-- Will Attend -->
                 <div class="form-group">
                     <label>
-                        <i class="fas fa-clipboard-check"></i>
-                        Will you join the dinner? <span class="required">*</span>
+                        <i class="fas fa-question-circle"></i> Will you join the dinner? *
                     </label>
                     <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="attendance" value="yes" required>
-                            <span class="radio-label">
-                                <i class="fas fa-check-circle"></i>
-                                Yes, I will attend
-                            </span>
+                        <label class="radio-label">
+                            <input type="radio" name="willAttend" value="yes" required>
+                            <span>Yes, I will attend</span>
                         </label>
-                        <label class="radio-option">
-                            <input type="radio" name="attendance" value="no" required>
-                            <span class="radio-label">
-                                <i class="fas fa-times-circle"></i>
-                                No, I cannot attend
-                            </span>
+                        <label class="radio-label">
+                            <input type="radio" name="willAttend" value="no" required>
+                            <span>No, I cannot attend</span>
                         </label>
                     </div>
                 </div>
 
-                <!-- Title/Position Selection -->
+                <!-- Title -->
                 <div class="form-group">
                     <label>
-                        <i class="fas fa-graduation-cap"></i>
-                        Your Title/Position <span class="required">*</span>
+                        <i class="fas fa-graduation-cap"></i> Your Title/Position *
                     </label>
-                    <div class="title-selection">
+                    <div class="title-options">
                         <label class="title-option">
                             <input type="radio" name="title" value="Master Student" required>
-                            <span class="title-card">
+                            <div class="title-card">
                                 <i class="fas fa-book"></i>
-                                <span class="title-text">Master Student</span>
-                            </span>
+                                <span>Master Student</span>
+                            </div>
                         </label>
                         <label class="title-option">
                             <input type="radio" name="title" value="Doctoral Student" required>
-                            <span class="title-card">
+                            <div class="title-card">
                                 <i class="fas fa-user-graduate"></i>
-                                <span class="title-text">Doctoral Student</span>
-                            </span>
+                                <span>Doctoral Student</span>
+                            </div>
                         </label>
                         <label class="title-option">
                             <input type="radio" name="title" value="Teachers and Staff" required>
-                            <span class="title-card">
+                            <div class="title-card">
                                 <i class="fas fa-chalkboard-teacher"></i>
-                                <span class="title-text">Teachers and Staff</span>
-                            </span>
+                                <span>Teachers and Staff</span>
+                            </div>
                         </label>
                     </div>
                 </div>
 
-                <!-- Date Selection (shown only if attending) -->
-                <div class="form-group" id="dateGroup" style="display: none;">
+                <!-- Available Dates -->
+                <div class="form-group" id="datesGroup" style="display: none;">
                     <label>
-                        <i class="fas fa-calendar-alt"></i>
-                        Select your available dates <span class="required">*</span>
+                        <i class="fas fa-calendar-alt"></i> Which dates are you available? *
                     </label>
-                    <div id="dateOptions" class="date-options">
-                        <!-- Dates will be generated by JavaScript -->
+                    <div id="datesContainer" class="dates-container">
+                        <!-- Dates will be dynamically generated -->
                     </div>
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Response
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-paper-plane"></i> Submit Response
                 </button>
-            </form>
 
-            <!-- Success Message -->
-            <div id="successMessage" class="success-message" style="display: none;">
-                <i class="fas fa-check-circle"></i>
-                <h3>Thank you!</h3>
-                <p>Your response has been submitted successfully.</p>
-            </div>
+                <!-- Messages -->
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                <div id="successMessage" class="success-message" style="display: none;">
+                    <i class="fas fa-check-circle"></i> Thank you! Your response has been recorded.
+                </div>
+            </form>
         </div>
 
         <!-- Admin Access Link -->
