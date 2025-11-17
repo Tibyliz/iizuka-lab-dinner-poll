@@ -37,7 +37,7 @@ function generateDates() {
         const dayName = getDayName(date);
         
         const label = document.createElement('label');
-        label.className = 'date-checkbox';
+        label.className = 'date-option';
         label.innerHTML = `
             <input type="checkbox" name="dates" value="${dateStr}">
             <div class="date-card">
