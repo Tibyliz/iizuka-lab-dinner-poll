@@ -1,272 +1,389 @@
-/**
- * Admin Dashboard Logic - Firebase Version
- * Complete dashboard with real-time updates, charts, and all features
- */
+// Admin Dashboard Controller - Enhanced with Editable Pricing Inputs
+// Two-way binding between sliders and input fields with decimal support
 
-// ============================================
-// GLOBAL VARIABLES
-// ============================================
+console.log('[Admin] Script loaded');
 
-let allResponses = [];
-let config = {};
-let attendanceChart = null;
-let datePopularityChart = null;
-let currentEditingId = null;
-
-// ============================================
-// AUTHENTICATION CHECK
-// ============================================
-
-const SESSION_KEY = 'adminLoggedIn';
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-
-function checkAuth() {
-    const isLoggedIn = sessionStorage.getItem(SESSION_KEY) === 'true';
-    const loginTime = sessionStorage.getItem('loginTime');
-    const now = Date.now();
-    
-    if (!isLoggedIn || !loginTime || (now - parseInt(loginTime)) > SESSION_DURATION) {
-        console.log('[Admin] Not authenticated, redirecting to login...');
-        window.location.href = 'admin-login.html';
-        return false;
+// Global state
+let responses = [];
+let archives = [];
+let config = {
+    pollTitle: 'Iizuka Lab Dinner Poll',
+    basePrice: 10000,
+    pricing: {
+        bachelor: 15,
+        master: 20,
+        phd: 30,
+        faculty: 35
     }
-    
-    return true;
-}
+};
 
-function logout() {
-    sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem('loginTime');
-    window.location.href = 'admin-login.html';
-}
+let charts = {
+    position: null,
+    datePopularity: null
+};
 
-// ============================================
-// INITIALIZATION
-// ============================================
+let currentEditingResponseId = null;
 
-document.addEventListener('DOMContentLoaded', async function() {
+// Initialize dashboard when DOM is ready
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('[Admin] Dashboard initializing...');
     
     // Check authentication
-    if (!checkAuth()) return;
-    
-    try {
-        // Test Firebase connection
-        await api.testConnection();
-        
-        // Initialize default config
-        config = await api.initializeDefaultConfig();
-        
-        // Load all data
-        await loadDashboard();
-        
-        // Setup real-time listeners
-        setupRealtimeUpdates();
-        
-        // Setup event handlers
-        setupEventHandlers();
-        
-        // Hide loading, show dashboard
-        document.getElementById('loadingScreen').style.display = 'none';
-        document.getElementById('dashboardContent').style.display = 'block';
-        
-        console.log('[Admin] ✅ Dashboard initialized successfully!');
-        
-    } catch (error) {
-        console.error('[Admin] ❌ Initialization error:', error);
-        alert('Failed to load dashboard. Please check Firebase configuration and try again.');
+    if (!checkAuth()) {
+        window.location.href = 'admin-login.html';
+        return;
     }
+
+    // Initialize pricing controls with two-way binding
+    initializePricingControls();
+    
+    // Initialize other event listeners
+    initializeEventListeners();
+    
+    // Load data
+    await loadDashboardData();
+    
+    // Hide loading overlay
+    hideLoading();
+    
+    console.log('[Admin] Dashboard ready!');
 });
 
-// ============================================
-// LOAD DASHBOARD DATA
-// ============================================
-
-async function loadDashboard() {
-    console.log('[Admin] Loading dashboard data...');
-    
-    // Load responses
-    allResponses = await api.getAllResponses();
-    console.log(`[Admin] Loaded ${allResponses.length} responses`);
-    
-    // Load config
-    config = await api.getConfig();
-    console.log('[Admin] Config loaded:', config);
-    
-    // Update UI
-    updateStatistics();
-    updateCharts();
-    renderResponsesTable();
-    loadConfigToUI();
-    loadArchives();
+// Authentication check
+function checkAuth() {
+    return sessionStorage.getItem('adminLoggedIn') === 'true';
 }
 
-// ============================================
-// REAL-TIME UPDATES
-// ============================================
-
-function setupRealtimeUpdates() {
-    console.log('[Admin] Setting up real-time listeners...');
+// Initialize pricing controls with two-way binding
+function initializePricingControls() {
+    console.log('[Admin] Initializing pricing controls with two-way binding...');
     
-    // Listen for response changes
-    api.onResponsesChange((responses) => {
-        console.log('[Admin] 🔄 Real-time update: Responses changed');
-        allResponses = responses;
+    const positions = ['bachelor', 'master', 'phd', 'faculty'];
+    
+    positions.forEach(position => {
+        const slider = document.getElementById(`${position}Slider`);
+        const input = document.getElementById(`${position}Input`);
+        
+        if (!slider || !input) {
+            console.error(`[Admin] Missing slider or input for ${position}`);
+            return;
+        }
+        
+        // Slider → Input (two-way binding)
+        slider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            input.value = value;
+            config.pricing[position] = value;
+            updatePricingDisplay();
+            updateTotalValidation();
+        });
+        
+        // Input → Slider (two-way binding)
+        input.addEventListener('input', (e) => {
+            let value = parseFloat(e.target.value);
+            
+            // Validate range
+            if (isNaN(value) || value < 0) value = 0;
+            if (value > 100) value = 100;
+            
+            // Round to nearest 0.5 for better UX
+            value = Math.round(value * 2) / 2;
+            
+            e.target.value = value;
+            slider.value = value;
+            config.pricing[position] = value;
+            updatePricingDisplay();
+            updateTotalValidation();
+        });
+        
+        // Blur event for final validation
+        input.addEventListener('blur', (e) => {
+            let value = parseFloat(e.target.value);
+            if (isNaN(value)) value = 0;
+            value = Math.round(value * 2) / 2;
+            e.target.value = value;
+            slider.value = value;
+            config.pricing[position] = value;
+            updatePricingDisplay();
+            updateTotalValidation();
+        });
+    });
+    
+    // Base price input
+    const basePriceInput = document.getElementById('basePrice');
+    if (basePriceInput) {
+        basePriceInput.addEventListener('input', (e) => {
+            let value = parseInt(e.target.value);
+            if (isNaN(value) || value < 0) value = 0;
+            config.basePrice = value;
+            updatePricingDisplay();
+        });
+    }
+    
+    console.log('[Admin] Pricing controls initialized with two-way binding');
+}
+
+// Update pricing display (amounts per position)
+function updatePricingDisplay() {
+    const positions = ['bachelor', 'master', 'phd', 'faculty'];
+    
+    positions.forEach(position => {
+        const amountElement = document.getElementById(`${position}Amount`);
+        if (amountElement) {
+            const percentage = config.pricing[position];
+            const amount = Math.round((config.basePrice * percentage) / 100);
+            amountElement.textContent = `¥${amount.toLocaleString()}`;
+        }
+    });
+}
+
+// Update total percentage validation
+function updateTotalValidation() {
+    const total = Object.values(config.pricing).reduce((sum, val) => sum + val, 0);
+    const totalValueElement = document.getElementById('totalPercentValue');
+    const totalIconElement = document.getElementById('totalValidIcon');
+    const totalWarningElement = document.getElementById('totalWarning');
+    
+    if (totalValueElement) {
+        totalValueElement.textContent = `${total.toFixed(1)}%`;
+    }
+    
+    const isValid = Math.abs(total - 100) < 0.1; // Allow 0.1% tolerance for floating point
+    
+    if (totalIconElement) {
+        if (isValid) {
+            totalIconElement.className = 'fas fa-check-circle total-icon valid';
+        } else {
+            totalIconElement.className = 'fas fa-exclamation-circle total-icon invalid';
+        }
+    }
+    
+    if (totalWarningElement) {
+        totalWarningElement.style.display = isValid ? 'none' : 'flex';
+    }
+    
+    return isValid;
+}
+
+// Initialize all event listeners
+function initializeEventListeners() {
+    // Header actions
+    document.getElementById('startNewVoteBtn').addEventListener('click', startNewVote);
+    document.getElementById('saveArchiveBtn').addEventListener('click', saveArchiveManually);
+    document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    
+    // Export buttons
+    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+    document.getElementById('exportPdfBtn').addEventListener('click', exportToPdf);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
+    
+    // Filter controls
+    document.getElementById('filterPaidOnly').addEventListener('change', filterResponses);
+    document.getElementById('filterUnpaidOnly').addEventListener('change', filterResponses);
+    
+    // Save pricing button
+    document.getElementById('savePricingBtn').addEventListener('click', savePricingConfig);
+    
+    // Poll configuration
+    document.getElementById('generateDatesBtn').addEventListener('click', generateDates);
+    document.getElementById('saveConfigBtn').addEventListener('click', saveConfig);
+    
+    // Modal close
+    const modal = document.getElementById('editAmountModal');
+    const closeBtn = modal.querySelector('.close');
+    closeBtn.addEventListener('click', () => modal.style.display = 'none');
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+    
+    // Modal actions
+    document.getElementById('saveAmountBtn').addEventListener('click', saveCustomAmount);
+    document.getElementById('resetAmountBtn').addEventListener('click', resetAmount);
+}
+
+// Load all dashboard data
+async function loadDashboardData() {
+    try {
+        showLoading('Loading dashboard data...');
+        
+        // Load config
+        await loadConfig();
+        
+        // Load responses
+        await loadResponses();
+        
+        // Load archives
+        await loadArchives();
+        
+        // Update UI
         updateStatistics();
         updateCharts();
-        renderResponsesTable();
-    });
-    
-    // Listen for config changes
-    api.onConfigChange((newConfig) => {
-        console.log('[Admin] 🔄 Real-time update: Config changed');
-        config = newConfig;
-        loadConfigToUI();
-    });
+        updateResponsesTable();
+        updateArchivesList();
+        
+        hideLoading();
+        showToast('Dashboard loaded successfully!', 'success');
+    } catch (error) {
+        console.error('[Admin] Error loading dashboard:', error);
+        hideLoading();
+        showToast('Error loading dashboard: ' + error.message, 'error');
+    }
 }
 
-// ============================================
-// STATISTICS
-// ============================================
+// Load configuration from Firebase
+async function loadConfig() {
+    try {
+        console.log('[Admin] Loading config...');
+        const data = await firebaseAPI.getConfig();
+        
+        if (data) {
+            config = {
+                pollTitle: data.pollTitle || 'Iizuka Lab Dinner Poll',
+                startDate: data.startDate || '',
+                endDate: data.endDate || '',
+                basePrice: data.basePrice || 10000,
+                pricing: data.pricing || {
+                    bachelor: 15,
+                    master: 20,
+                    phd: 30,
+                    faculty: 35
+                }
+            };
+            
+            // Update UI
+            document.getElementById('pollTitle').value = config.pollTitle;
+            document.getElementById('startDate').value = config.startDate;
+            document.getElementById('endDate').value = config.endDate;
+            document.getElementById('basePrice').value = config.basePrice;
+            
+            // Update pricing controls
+            ['bachelor', 'master', 'phd', 'faculty'].forEach(position => {
+                const value = config.pricing[position];
+                document.getElementById(`${position}Slider`).value = value;
+                document.getElementById(`${position}Input`).value = value;
+            });
+            
+            updatePricingDisplay();
+            updateTotalValidation();
+            
+            console.log('[Admin] Config loaded successfully');
+        }
+    } catch (error) {
+        console.error('[Admin] Error loading config:', error);
+        throw error;
+    }
+}
 
+// Load responses from Firebase
+async function loadResponses() {
+    try {
+        console.log('[Admin] Loading responses...');
+        responses = await firebaseAPI.getResponses();
+        console.log(`[Admin] Loaded ${responses.length} responses`);
+    } catch (error) {
+        console.error('[Admin] Error loading responses:', error);
+        throw error;
+    }
+}
+
+// Load archives from Firebase
+async function loadArchives() {
+    try {
+        console.log('[Admin] Loading archives...');
+        const data = await firebaseAPI.getArchives();
+        archives = data ? Object.entries(data).map(([id, archive]) => ({ id, ...archive })) : [];
+        console.log(`[Admin] Loaded ${archives.length} archives`);
+    } catch (error) {
+        console.error('[Admin] Error loading archives:', error);
+        // Not critical, continue
+    }
+}
+
+// Update statistics cards
 function updateStatistics() {
-    const total = allResponses.length;
-    const attending = allResponses.filter(r => r.attendance === "Yes, I'll attend").length;
-    const notAttending = total - attending;
+    const attending = responses.filter(r => r.attendance === "Yes, I'll attend");
+    const totalCost = config.basePrice;
     
-    document.getElementById('totalResponses').textContent = total;
-    document.getElementById('totalAttending').textContent = attending;
-    document.getElementById('totalNotAttending').textContent = notAttending;
-    
-    // Calculate total cost
-    const totalCost = calculateTotalCost();
-    document.getElementById('totalCost').textContent = `¥${totalCost.toLocaleString()}`;
-}
-
-function calculateTotalCost() {
-    const basePrice = parseFloat(config.basePrice) || 10000;
-    const attendingResponses = allResponses.filter(r => r.attendance === "Yes, I'll attend");
-    
-    const percents = {
-        'Bachelor Student': parseFloat(config.bachelorPercent) || 15,
-        "Master's Student": parseFloat(config.masterPercent) || 20,
-        'PhD Student': parseFloat(config.phdPercent) || 30,
-        'Faculty/Staff': parseFloat(config.facultyPercent) || 35
-    };
-    
-    // Count by position
-    const counts = {};
-    attendingResponses.forEach(r => {
-        counts[r.position] = (counts[r.position] || 0) + 1;
-    });
-    
-    // Calculate total percentage needed
-    const totalPercent = Object.keys(counts).reduce((sum, position) => {
-        return sum + (percents[position] * counts[position]);
-    }, 0);
-    
-    // If total percent is 0, no cost
-    if (totalPercent === 0) return 0;
-    
-    // Calculate actual cost per person
-    let totalCost = 0;
-    attendingResponses.forEach(r => {
-        if (r.customAmount !== null && r.customAmount !== undefined && r.isEdited) {
-            totalCost += parseFloat(r.customAmount);
-        } else {
-            const percent = percents[r.position] || 0;
-            const cost = (basePrice * percent) / totalPercent;
-            totalCost += cost;
+    // Calculate total paid
+    let totalPaid = 0;
+    attending.forEach(response => {
+        if (response.paymentStatus) {
+            const amount = response.customAmount || calculateAmount(response.position);
+            totalPaid += amount;
         }
     });
     
-    return Math.round(totalCost);
+    document.getElementById('totalResponses').textContent = responses.length;
+    document.getElementById('attendingCount').textContent = attending.length;
+    document.getElementById('totalCost').textContent = `¥${totalCost.toLocaleString()}`;
+    document.getElementById('totalPaid').textContent = `¥${totalPaid.toLocaleString()}`;
 }
 
-function calculateIndividualAmount(response) {
-    if (response.customAmount !== null && response.customAmount !== undefined && response.isEdited) {
-        return parseFloat(response.customAmount);
-    }
-    
-    if (response.attendance !== "Yes, I'll attend") {
-        return 0;
-    }
-    
-    const basePrice = parseFloat(config.basePrice) || 10000;
-    const attendingResponses = allResponses.filter(r => r.attendance === "Yes, I'll attend");
-    
-    const percents = {
-        'Bachelor Student': parseFloat(config.bachelorPercent) || 15,
-        "Master's Student": parseFloat(config.masterPercent) || 20,
-        'PhD Student': parseFloat(config.phdPercent) || 30,
-        'Faculty/Staff': parseFloat(config.facultyPercent) || 35
-    };
-    
-    const counts = {};
-    attendingResponses.forEach(r => {
-        counts[r.position] = (counts[r.position] || 0) + 1;
-    });
-    
-    const totalPercent = Object.keys(counts).reduce((sum, position) => {
-        return sum + (percents[position] * counts[position]);
-    }, 0);
-    
-    if (totalPercent === 0) return 0;
-    
-    const percent = percents[response.position] || 0;
-    return Math.round((basePrice * percent) / totalPercent);
+// Calculate amount for a position
+function calculateAmount(position) {
+    const positionKey = position.toLowerCase().replace(/['\/\s]/g, '').replace('students', '').replace('student', '').replace('facultystaff', 'faculty');
+    const percentage = config.pricing[positionKey] || 0;
+    return Math.round((config.basePrice * percentage) / 100);
 }
 
-// ============================================
-// CHARTS
-// ============================================
-
+// Update charts
 function updateCharts() {
-    updateAttendanceChart();
+    updatePositionChart();
     updateDatePopularityChart();
 }
 
-function updateAttendanceChart() {
-    const ctx = document.getElementById('attendanceChart').getContext('2d');
+// Update position breakdown chart
+function updatePositionChart() {
+    const canvas = document.getElementById('positionChart');
+    if (!canvas) return;
     
-    // Count by position (attending only)
-    const attendingResponses = allResponses.filter(r => r.attendance === "Yes, I'll attend");
-    const counts = {
+    const ctx = canvas.getContext('2d');
+    
+    // Destroy existing chart
+    if (charts.position) {
+        charts.position.destroy();
+    }
+    
+    // Count by position
+    const positionCounts = {
         'Bachelor Student': 0,
         "Master's Student": 0,
         'PhD Student': 0,
         'Faculty/Staff': 0
     };
     
-    attendingResponses.forEach(r => {
-        if (counts.hasOwnProperty(r.position)) {
-            counts[r.position]++;
+    responses.filter(r => r.attendance === "Yes, I'll attend").forEach(r => {
+        if (positionCounts.hasOwnProperty(r.position)) {
+            positionCounts[r.position]++;
         }
     });
     
-    // Destroy old chart
-    if (attendanceChart) {
-        attendanceChart.destroy();
-    }
-    
-    // Create new chart
-    attendanceChart = new Chart(ctx, {
+    // Create chart
+    charts.position = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: Object.keys(counts),
+            labels: Object.keys(positionCounts),
             datasets: [{
-                data: Object.values(counts),
+                data: Object.values(positionCounts),
                 backgroundColor: [
-                    '#3498db',
-                    '#2ecc71',
-                    '#f39c12',
-                    '#e74c3c'
-                ]
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(241, 147, 251, 0.8)',
+                    'rgba(79, 172, 254, 0.8)',
+                    'rgba(67, 233, 123, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(102, 126, 234, 1)',
+                    'rgba(241, 147, 251, 1)',
+                    'rgba(79, 172, 254, 1)',
+                    'rgba(67, 233, 123, 1)'
+                ],
+                borderWidth: 2
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'bottom'
@@ -279,62 +396,48 @@ function updateAttendanceChart() {
     });
 }
 
+// Update date popularity chart
 function updateDatePopularityChart() {
-    const ctx = document.getElementById('datePopularityChart').getContext('2d');
+    const canvas = document.getElementById('datePopularityChart');
+    if (!canvas) return;
     
-    // Get available dates
-    const datesString = config.availableDates || '';
-    if (!datesString) {
-        if (datePopularityChart) datePopularityChart.destroy();
-        ctx.canvas.parentElement.querySelector('canvas').style.display = 'none';
-        return;
+    const ctx = canvas.getContext('2d');
+    
+    // Destroy existing chart
+    if (charts.datePopularity) {
+        charts.datePopularity.destroy();
     }
     
-    ctx.canvas.style.display = 'block';
-    
-    const availableDates = datesString.split(',').map(d => d.trim()).filter(d => d);
-    
-    // Count how many people selected each date
+    // Count date selections
     const dateCounts = {};
-    availableDates.forEach(date => {
-        dateCounts[date] = 0;
-    });
-    
-    allResponses.forEach(response => {
-        if (!response.selectedDates) return;
-        const selectedDates = response.selectedDates.split(',').map(d => d.trim());
-        selectedDates.forEach(date => {
-            if (dateCounts.hasOwnProperty(date)) {
-                dateCounts[date]++;
+    responses.filter(r => r.attendance === "Yes, I'll attend" && r.selectedDates).forEach(r => {
+        const dates = r.selectedDates.split(',').map(d => d.trim());
+        dates.forEach(date => {
+            if (date) {
+                dateCounts[date] = (dateCounts[date] || 0) + 1;
             }
         });
     });
     
-    // Format dates for display
-    const labels = availableDates.map(date => formatDateShort(date));
-    const data = availableDates.map(date => dateCounts[date]);
+    // Sort by count (descending)
+    const sortedDates = Object.entries(dateCounts).sort((a, b) => b[1] - a[1]);
     
-    // Destroy old chart
-    if (datePopularityChart) {
-        datePopularityChart.destroy();
-    }
-    
-    // Create new chart
-    datePopularityChart = new Chart(ctx, {
+    // Create chart
+    charts.datePopularity = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels: sortedDates.map(d => d[0]),
             datasets: [{
-                label: 'Number of People',
-                data: data,
-                backgroundColor: '#667eea',
-                borderColor: '#5568d3',
+                label: 'Number of Selections',
+                data: sortedDates.map(d => d[1]),
+                backgroundColor: 'rgba(67, 233, 123, 0.8)',
+                borderColor: 'rgba(67, 233, 123, 1)',
                 borderWidth: 2
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
@@ -355,195 +458,221 @@ function updateDatePopularityChart() {
     });
 }
 
-function formatDateShort(dateString) {
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch {
-        return dateString;
-    }
+// Update responses table
+function updateResponsesTable() {
+    const tbody = document.getElementById('responsesTableBody');
+    tbody.innerHTML = '';
+    
+    responses.forEach(response => {
+        const amount = response.customAmount || calculateAmount(response.position);
+        const isCustom = response.customAmount ? 'amount-custom' : '';
+        const editIcon = response.customAmount ? ' <i class="fas fa-edit"></i>' : '';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${response.name}</td>
+            <td>${response.attendance}</td>
+            <td>${response.position}</td>
+            <td>${response.selectedDates || 'N/A'}</td>
+            <td class="amount-cell ${isCustom}" data-id="${response.id}">
+                ¥${amount.toLocaleString()}${editIcon}
+            </td>
+            <td>
+                <input type="checkbox" class="payment-checkbox" data-id="${response.id}" ${response.paymentStatus ? 'checked' : ''}>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteResponse('${response.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // Add click handlers for amount cells
+    document.querySelectorAll('.amount-cell').forEach(cell => {
+        cell.addEventListener('click', (e) => {
+            const id = e.currentTarget.getAttribute('data-id');
+            openEditAmountModal(id);
+        });
+    });
+    
+    // Add change handlers for payment checkboxes
+    document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const paid = e.target.checked;
+            await updatePaymentStatus(id, paid);
+        });
+    });
 }
 
-// ============================================
-// RESPONSES TABLE
-// ============================================
-
-function renderResponsesTable() {
-    const tbody = document.getElementById('responsesTableBody');
+// Open edit amount modal
+function openEditAmountModal(responseId) {
+    const response = responses.find(r => r.id === responseId);
+    if (!response) return;
     
-    if (allResponses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="no-data">No responses yet</td></tr>';
+    currentEditingResponseId = responseId;
+    const defaultAmount = calculateAmount(response.position);
+    const customAmount = response.customAmount || defaultAmount;
+    
+    document.getElementById('editName').textContent = response.name;
+    document.getElementById('editPosition').textContent = response.position;
+    document.getElementById('editDefaultAmount').textContent = `¥${defaultAmount.toLocaleString()}`;
+    document.getElementById('customAmount').value = customAmount;
+    
+    document.getElementById('editAmountModal').style.display = 'block';
+}
+
+// Save custom amount
+async function saveCustomAmount() {
+    if (!currentEditingResponseId) return;
+    
+    const amount = parseInt(document.getElementById('customAmount').value);
+    if (isNaN(amount) || amount < 0) {
+        showToast('Please enter a valid amount', 'error');
         return;
     }
     
-    // Get filter values
-    const positionFilter = document.getElementById('positionFilter').value;
-    const paymentFilter = document.getElementById('paymentFilter').value;
-    
-    // Filter responses
-    let filteredResponses = allResponses;
-    
-    if (positionFilter !== 'all') {
-        filteredResponses = filteredResponses.filter(r => r.position === positionFilter);
-    }
-    
-    if (paymentFilter === 'paid') {
-        filteredResponses = filteredResponses.filter(r => r.paymentStatus === true);
-    } else if (paymentFilter === 'unpaid') {
-        filteredResponses = filteredResponses.filter(r => r.paymentStatus !== true);
-    }
-    
-    tbody.innerHTML = filteredResponses.map(response => {
-        const amount = calculateIndividualAmount(response);
-        const amountClass = response.isEdited ? 'amount-cell edited' : 'amount-cell';
-        const editIcon = response.isEdited ? '<i class="fas fa-edit"></i>' : '';
-        
-        return `
-            <tr>
-                <td><strong>${response.name}</strong></td>
-                <td>
-                    ${response.attendance === "Yes, I'll attend" 
-                        ? '<span style="color: #2ecc71;"><i class="fas fa-check-circle"></i> Yes</span>'
-                        : '<span style="color: #e74c3c;"><i class="fas fa-times-circle"></i> No</span>'
-                    }
-                </td>
-                <td>${response.position}</td>
-                <td>${response.selectedDates || '-'}</td>
-                <td>
-                    <span class="${amountClass}" onclick="openEditAmountModal('${response.id}')">
-                        ¥${amount.toLocaleString()} ${editIcon}
-                    </span>
-                </td>
-                <td>
-                    <input type="checkbox" class="payment-checkbox" 
-                           ${response.paymentStatus ? 'checked' : ''} 
-                           onchange="togglePayment('${response.id}', this.checked)">
-                </td>
-                <td>
-                    <button class="action-btn delete" onclick="deleteResponse('${response.id}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-async function togglePayment(id, paid) {
     try {
-        await api.updateResponse(id, { paymentStatus: paid });
-        console.log(`[Admin] Payment status updated for ${id}`);
+        await firebaseAPI.updateResponse(currentEditingResponseId, {
+            customAmount: amount,
+            isEdited: true
+        });
+        
+        // Update local data
+        const response = responses.find(r => r.id === currentEditingResponseId);
+        if (response) {
+            response.customAmount = amount;
+            response.isEdited = true;
+        }
+        
+        updateResponsesTable();
+        updateStatistics();
+        document.getElementById('editAmountModal').style.display = 'none';
+        showToast('Amount updated successfully!', 'success');
     } catch (error) {
-        console.error('[Admin] Error updating payment:', error);
-        alert('Failed to update payment status');
+        console.error('[Admin] Error updating amount:', error);
+        showToast('Error updating amount: ' + error.message, 'error');
     }
 }
 
-async function deleteResponse(id) {
+// Reset amount to default
+async function resetAmount() {
+    if (!currentEditingResponseId) return;
+    
+    try {
+        await firebaseAPI.updateResponse(currentEditingResponseId, {
+            customAmount: null,
+            isEdited: false
+        });
+        
+        // Update local data
+        const response = responses.find(r => r.id === currentEditingResponseId);
+        if (response) {
+            delete response.customAmount;
+            response.isEdited = false;
+        }
+        
+        updateResponsesTable();
+        updateStatistics();
+        document.getElementById('editAmountModal').style.display = 'none';
+        showToast('Amount reset to default!', 'success');
+    } catch (error) {
+        console.error('[Admin] Error resetting amount:', error);
+        showToast('Error resetting amount: ' + error.message, 'error');
+    }
+}
+
+// Update payment status
+async function updatePaymentStatus(responseId, paid) {
+    try {
+        await firebaseAPI.updateResponse(responseId, { paymentStatus: paid });
+        
+        // Update local data
+        const response = responses.find(r => r.id === responseId);
+        if (response) {
+            response.paymentStatus = paid;
+        }
+        
+        updateStatistics();
+        showToast('Payment status updated!', 'success');
+    } catch (error) {
+        console.error('[Admin] Error updating payment status:', error);
+        showToast('Error updating payment status: ' + error.message, 'error');
+    }
+}
+
+// Delete response
+async function deleteResponse(responseId) {
     if (!confirm('Are you sure you want to delete this response?')) return;
     
     try {
-        await api.deleteResponse(id);
-        console.log(`[Admin] Response deleted: ${id}`);
+        await firebaseAPI.deleteResponse(responseId);
+        responses = responses.filter(r => r.id !== responseId);
+        
+        updateResponsesTable();
+        updateStatistics();
+        updateCharts();
+        showToast('Response deleted!', 'success');
     } catch (error) {
         console.error('[Admin] Error deleting response:', error);
-        alert('Failed to delete response');
+        showToast('Error deleting response: ' + error.message, 'error');
     }
 }
 
-// ============================================
-// EDIT AMOUNT MODAL
-// ============================================
-
-function openEditAmountModal(id) {
-    const response = allResponses.find(r => r.id === id);
-    if (!response) return;
+// Filter responses
+function filterResponses() {
+    const paidOnly = document.getElementById('filterPaidOnly').checked;
+    const unpaidOnly = document.getElementById('filterUnpaidOnly').checked;
     
-    currentEditingId = id;
+    let filteredResponses = [...responses];
     
-    document.getElementById('editName').textContent = response.name;
-    const currentAmount = response.customAmount !== null && response.customAmount !== undefined && response.isEdited
-        ? response.customAmount
-        : calculateIndividualAmount(response);
-    document.getElementById('editAmount').value = currentAmount;
+    if (paidOnly) {
+        filteredResponses = filteredResponses.filter(r => r.paymentStatus);
+    }
+    if (unpaidOnly) {
+        filteredResponses = filteredResponses.filter(r => !r.paymentStatus);
+    }
     
-    document.getElementById('editAmountModal').classList.add('show');
+    // Temporarily replace responses for table update
+    const originalResponses = responses;
+    responses = filteredResponses;
+    updateResponsesTable();
+    responses = originalResponses;
 }
 
-function closeEditAmountModal() {
-    document.getElementById('editAmountModal').classList.remove('show');
-    currentEditingId = null;
-}
-
-document.getElementById('saveAmountBtn').addEventListener('click', async function() {
-    if (!currentEditingId) return;
-    
-    const newAmount = document.getElementById('editAmount').value;
+// Save pricing configuration
+async function savePricingConfig() {
+    // Validate total percentage
+    if (!updateTotalValidation()) {
+        showToast('Total percentage must equal 100%!', 'error');
+        return;
+    }
     
     try {
-        if (newAmount === '' || newAmount === null) {
-            // Reset to default
-            await api.updateResponse(currentEditingId, {
-                customAmount: null,
-                isEdited: false
-            });
-        } else {
-            // Set custom amount
-            await api.updateResponse(currentEditingId, {
-                customAmount: parseFloat(newAmount),
-                isEdited: true
-            });
-        }
+        await firebaseAPI.updateConfig({
+            basePrice: config.basePrice,
+            pricing: config.pricing
+        });
         
-        closeEditAmountModal();
-        console.log('[Admin] Amount updated');
+        showToast('Pricing configuration saved!', 'success');
+        updatePricingDisplay();
+        updateResponsesTable();
+        updateStatistics();
     } catch (error) {
-        console.error('[Admin] Error updating amount:', error);
-        alert('Failed to update amount');
+        console.error('[Admin] Error saving pricing:', error);
+        showToast('Error saving pricing: ' + error.message, 'error');
     }
-});
-
-// Close modal on outside click
-document.getElementById('editAmountModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeEditAmountModal();
-    }
-});
-
-// ============================================
-// PRICING CONFIGURATION
-// ============================================
-
-function loadConfigToUI() {
-    document.getElementById('pollTitle').value = config.pollTitle || 'Iizuka Lab Dinner Poll';
-    document.getElementById('basePrice').value = config.basePrice || 10000;
-    document.getElementById('bachelorPercent').value = config.bachelorPercent || 15;
-    document.getElementById('masterPercent').value = config.masterPercent || 20;
-    document.getElementById('phdPercent').value = config.phdPercent || 30;
-    document.getElementById('facultyPercent').value = config.facultyPercent || 35;
-    document.getElementById('startDate').value = config.startDate || '';
-    document.getElementById('endDate').value = config.endDate || '';
-    
-    updatePercentageDisplays();
 }
 
-function updatePercentageDisplays() {
-    document.getElementById('bachelorPercentValue').textContent = document.getElementById('bachelorPercent').value;
-    document.getElementById('masterPercentValue').textContent = document.getElementById('masterPercent').value;
-    document.getElementById('phdPercentValue').textContent = document.getElementById('phdPercent').value;
-    document.getElementById('facultyPercentValue').textContent = document.getElementById('facultyPercent').value;
-}
-
-// ============================================
-// DATE RANGE GENERATION
-// ============================================
-
-document.getElementById('generateDatesBtn').addEventListener('click', function() {
+// Generate dates
+function generateDates() {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
     if (!startDate || !endDate) {
-        alert('Please select both start and end dates');
+        showToast('Please select both start and end dates', 'error');
         return;
     }
     
@@ -551,297 +680,221 @@ document.getElementById('generateDatesBtn').addEventListener('click', function()
     const end = new Date(endDate);
     
     if (start > end) {
-        alert('Start date must be before end date');
+        showToast('Start date must be before end date', 'error');
         return;
     }
     
     const dates = [];
-    const currentDate = new Date(start);
+    const current = new Date(start);
     
-    while (currentDate <= end) {
-        dates.push(currentDate.toISOString().split('T')[0]);
-        currentDate.setDate(currentDate.getDate() + 1);
+    while (current <= end) {
+        dates.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 1);
     }
     
-    const datePreview = document.getElementById('datePreview');
-    const datePreviewText = document.getElementById('datePreviewText');
+    const preview = document.getElementById('datePreview');
+    preview.textContent = `${dates.length} dates from ${startDate} to ${endDate}`;
     
-    datePreviewText.textContent = `${dates.length} dates from ${formatDateShort(startDate)} to ${formatDateShort(endDate)}`;
-    datePreview.style.display = 'block';
+    config.startDate = startDate;
+    config.endDate = endDate;
+    config.availableDates = dates;
     
-    config.availableDates = dates.join(',');
-    
-    console.log('[Admin] Generated dates:', dates);
-});
+    showToast('Dates generated! Click "Save Configuration" to apply.', 'info');
+}
 
-// ============================================
-// SAVE CONFIGURATIONS
-// ============================================
-
-document.getElementById('savePricingBtn').addEventListener('click', async function() {
-    try {
-        const updates = {
-            basePrice: parseFloat(document.getElementById('basePrice').value),
-            bachelorPercent: parseFloat(document.getElementById('bachelorPercent').value),
-            masterPercent: parseFloat(document.getElementById('masterPercent').value),
-            phdPercent: parseFloat(document.getElementById('phdPercent').value),
-            facultyPercent: parseFloat(document.getElementById('facultyPercent').value)
-        };
-        
-        await api.updateConfig(updates);
-        alert('✅ Pricing configuration saved!');
-        console.log('[Admin] Pricing saved');
-    } catch (error) {
-        console.error('[Admin] Error saving pricing:', error);
-        alert('Failed to save pricing configuration');
+// Save configuration
+async function saveConfig() {
+    const pollTitle = document.getElementById('pollTitle').value;
+    
+    if (!pollTitle.trim()) {
+        showToast('Please enter a poll title', 'error');
+        return;
     }
-});
-
-document.getElementById('savePollConfigBtn').addEventListener('click', async function() {
+    
     try {
-        const updates = {
-            pollTitle: document.getElementById('pollTitle').value,
-            startDate: document.getElementById('startDate').value,
-            endDate: document.getElementById('endDate').value,
-            availableDates: config.availableDates || ''
-        };
+        config.pollTitle = pollTitle;
+        await firebaseAPI.updateConfig(config);
         
-        await api.updateConfig(updates);
-        alert('✅ Poll configuration saved!');
-        console.log('[Admin] Poll config saved');
+        showToast('Configuration saved successfully!', 'success');
     } catch (error) {
-        console.error('[Admin] Error saving poll config:', error);
-        alert('Failed to save poll configuration');
-    }
-});
-
-// ============================================
-// ARCHIVE MANAGEMENT
-// ============================================
-
-async function loadArchives() {
-    try {
-        const archives = await api.getAllArchives();
-        const container = document.getElementById('archivesList');
-        
-        if (archives.length === 0) {
-            container.innerHTML = '<p class="no-data">No archives yet</p>';
-            return;
-        }
-        
-        container.innerHTML = archives.map(archive => `
-            <div class="archive-item">
-                <div class="archive-info">
-                    <h3><i class="fas fa-folder"></i> ${archive.archiveName}</h3>
-                    <p><i class="fas fa-clock"></i> ${new Date(archive.createdDate).toLocaleString()}</p>
-                </div>
-                <div class="archive-actions">
-                    <button class="archive-btn restore" onclick="restoreArchive('${archive.id}')">
-                        <i class="fas fa-undo"></i> Restore
-                    </button>
-                    <button class="archive-btn delete" onclick="deleteArchive('${archive.id}')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        console.error('[Admin] Error loading archives:', error);
+        console.error('[Admin] Error saving config:', error);
+        showToast('Error saving configuration: ' + error.message, 'error');
     }
 }
 
-document.getElementById('saveArchiveBtn').addEventListener('click', async function() {
-    const name = prompt('Enter archive name:', `${config.pollTitle} - ${new Date().toLocaleDateString()}`);
-    if (!name) return;
-    
-    try {
-        const archiveData = {
-            responses: allResponses,
-            config: config
-        };
-        
-        await api.saveArchive(name, archiveData);
-        alert('✅ Archive saved successfully!');
-        await loadArchives();
-        console.log('[Admin] Archive saved');
-    } catch (error) {
-        console.error('[Admin] Error saving archive:', error);
-        alert('Failed to save archive');
-    }
-});
-
-async function restoreArchive(id) {
-    if (!confirm('This will replace all current data with the archived data. Continue?')) return;
-    
-    try {
-        await api.restoreArchive(id);
-        alert('✅ Archive restored successfully!');
-        await loadDashboard();
-        console.log('[Admin] Archive restored');
-    } catch (error) {
-        console.error('[Admin] Error restoring archive:', error);
-        alert('Failed to restore archive');
-    }
-}
-
-async function deleteArchive(id) {
-    if (!confirm('Are you sure you want to delete this archive?')) return;
-    
-    try {
-        await api.deleteArchive(id);
-        await loadArchives();
-        console.log('[Admin] Archive deleted');
-    } catch (error) {
-        console.error('[Admin] Error deleting archive:', error);
-        alert('Failed to delete archive');
-    }
-}
-
-document.getElementById('startNewVoteBtn').addEventListener('click', async function() {
-    const confirmed = confirm(
-        'This will:\n' +
-        '1. Save current poll to archives\n' +
-        '2. Clear all current responses\n' +
-        '3. Start with a fresh poll\n\n' +
-        'Continue?'
-    );
-    
+// Start new vote
+async function startNewVote() {
+    const confirmed = confirm('This will archive the current poll data and start fresh. Continue?');
     if (!confirmed) return;
     
     try {
-        // Save to archive first
-        const archiveName = `${config.pollTitle} - ${new Date().toLocaleString()}`;
-        const archiveData = {
-            responses: allResponses,
-            config: config
-        };
+        showLoading('Starting new vote...');
         
-        await api.saveArchive(archiveName, archiveData);
+        // Create archive name
+        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
+        const archiveName = `${config.pollTitle} - ${timestamp}`;
         
-        // Clear all responses
-        await api.clearAllResponses();
+        // Save archive
+        await firebaseAPI.saveArchive(archiveName, {
+            responses,
+            config,
+            createdDate: new Date().toISOString()
+        });
         
-        alert('✅ New vote started! Previous data saved to archives.');
-        await loadDashboard();
-        console.log('[Admin] Started new vote');
+        // Clear responses
+        await firebaseAPI.clearResponses();
+        
+        hideLoading();
+        showToast('New vote started! Previous data archived.', 'success');
+        
+        // Reload dashboard
+        await loadDashboardData();
     } catch (error) {
         console.error('[Admin] Error starting new vote:', error);
-        alert('Failed to start new vote');
+        hideLoading();
+        showToast('Error starting new vote: ' + error.message, 'error');
     }
-});
-
-// ============================================
-// EXPORT FUNCTIONS
-// ============================================
-
-document.getElementById('exportExcelBtn').addEventListener('click', function() {
-    exportToExcel();
-});
-
-document.getElementById('exportPDFBtn').addEventListener('click', function() {
-    exportToPDF();
-});
-
-document.getElementById('exportCSVBtn').addEventListener('click', function() {
-    exportToCSV();
-});
-
-function exportToExcel() {
-    const data = allResponses.map(r => ({
-        'Name': r.name,
-        'Attendance': r.attendance,
-        'Position': r.position,
-        'Selected Dates': r.selectedDates || '-',
-        'Amount': calculateIndividualAmount(r),
-        'Payment Status': r.paymentStatus ? 'Paid' : 'Unpaid',
-        'Timestamp': new Date(r.timestamp).toLocaleString()
-    }));
-    
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Responses');
-    
-    XLSX.writeFile(wb, `poll-responses-${Date.now()}.xlsx`);
-    console.log('[Admin] Exported to Excel');
 }
 
-function exportToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+// Save archive manually
+async function saveArchiveManually() {
+    const archiveName = prompt('Enter archive name:', `${config.pollTitle} - ${new Date().toISOString().substring(0, 10)}`);
+    if (!archiveName) return;
     
-    doc.text(config.pollTitle || 'Poll Responses', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 22);
+    try {
+        showLoading('Saving archive...');
+        
+        await firebaseAPI.saveArchive(archiveName, {
+            responses,
+            config,
+            createdDate: new Date().toISOString()
+        });
+        
+        hideLoading();
+        showToast('Archive saved successfully!', 'success');
+        
+        // Reload archives
+        await loadArchives();
+        updateArchivesList();
+    } catch (error) {
+        console.error('[Admin] Error saving archive:', error);
+        hideLoading();
+        showToast('Error saving archive: ' + error.message, 'error');
+    }
+}
+
+// Update archives list
+function updateArchivesList() {
+    const container = document.getElementById('archivesList');
     
-    const tableData = allResponses.map(r => [
+    if (archives.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #718096;">No archives yet</p>';
+        return;
+    }
+    
+    container.innerHTML = archives.map(archive => `
+        <div class="archive-item">
+            <div class="archive-info">
+                <h3>${archive.archiveName || archive.id}</h3>
+                <p>${new Date(archive.createdDate).toLocaleString()}</p>
+            </div>
+            <div class="archive-actions">
+                <button class="btn btn-sm btn-info" onclick="viewArchive('${archive.id}')">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteArchive('${archive.id}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// View archive (placeholder)
+function viewArchive(archiveId) {
+    showToast('Archive viewing feature coming soon!', 'info');
+}
+
+// Delete archive
+async function deleteArchive(archiveId) {
+    if (!confirm('Are you sure you want to delete this archive?')) return;
+    
+    try {
+        await firebaseAPI.deleteArchive(archiveId);
+        archives = archives.filter(a => a.id !== archiveId);
+        
+        updateArchivesList();
+        showToast('Archive deleted!', 'success');
+    } catch (error) {
+        console.error('[Admin] Error deleting archive:', error);
+        showToast('Error deleting archive: ' + error.message, 'error');
+    }
+}
+
+// Export functions (placeholder implementations)
+function exportToExcel() {
+    showToast('Excel export feature coming soon!', 'info');
+}
+
+function exportToPdf() {
+    showToast('PDF export feature coming soon!', 'info');
+}
+
+function exportToCsv() {
+    const csvContent = convertToCSV(responses);
+    downloadFile(csvContent, 'poll-responses.csv', 'text/csv');
+    showToast('CSV downloaded!', 'success');
+}
+
+function convertToCSV(data) {
+    const headers = ['Name', 'Attendance', 'Position', 'Selected Dates', 'Amount', 'Payment Status'];
+    const rows = data.map(r => [
         r.name,
         r.attendance,
         r.position,
-        calculateIndividualAmount(r),
+        r.selectedDates || '',
+        r.customAmount || calculateAmount(r.position),
         r.paymentStatus ? 'Paid' : 'Unpaid'
     ]);
     
-    doc.autoTable({
-        startY: 28,
-        head: [['Name', 'Attendance', 'Position', 'Amount', 'Payment']],
-        body: tableData
-    });
-    
-    doc.save(`poll-responses-${Date.now()}.pdf`);
-    console.log('[Admin] Exported to PDF');
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
 }
 
-function exportToCSV() {
-    const headers = ['Name', 'Attendance', 'Position', 'Selected Dates', 'Amount', 'Payment Status', 'Timestamp'];
-    const rows = allResponses.map(r => [
-        r.name,
-        r.attendance,
-        r.position,
-        r.selectedDates || '-',
-        calculateIndividualAmount(r),
-        r.paymentStatus ? 'Paid' : 'Unpaid',
-        new Date(r.timestamp).toLocaleString()
-    ]);
-    
-    let csv = headers.join(',') + '\n';
-    rows.forEach(row => {
-        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
-    });
-    
-    const blob = new Blob([csv], { type: 'text/csv' });
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `poll-responses-${Date.now()}.csv`;
+    a.download = filename;
     a.click();
-    
-    console.log('[Admin] Exported to CSV');
+    URL.revokeObjectURL(url);
 }
 
-// ============================================
-// EVENT HANDLERS SETUP
-// ============================================
-
-function setupEventHandlers() {
-    // Filters
-    document.getElementById('positionFilter').addEventListener('change', renderResponsesTable);
-    document.getElementById('paymentFilter').addEventListener('change', renderResponsesTable);
-    
-    // Pricing sliders
-    document.getElementById('bachelorPercent').addEventListener('input', updatePercentageDisplays);
-    document.getElementById('masterPercent').addEventListener('input', updatePercentageDisplays);
-    document.getElementById('phdPercent').addEventListener('input', updatePercentageDisplays);
-    document.getElementById('facultyPercent').addEventListener('input', updatePercentageDisplays);
+// Logout
+function logout() {
+    sessionStorage.removeItem('adminLoggedIn');
+    window.location.href = 'admin-login.html';
 }
 
-// ============================================
-// CLEANUP ON PAGE UNLOAD
-// ============================================
+// UI Helper functions
+function showLoading(message = 'Loading...') {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.querySelector('p').textContent = message;
+        overlay.style.display = 'flex';
+    }
+}
 
-window.addEventListener('beforeunload', function() {
-    api.offResponsesChange();
-    api.offConfigChange();
-});
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
 
-console.log('[Admin] Script loaded');
+function showToast(message, type = 'info') {
+    console.log(`[Toast ${type.toUpperCase()}] ${message}`);
+    alert(message); // Simple implementation, can be enhanced with a toast library
+}
+
+console.log('[Admin] Script initialization complete');
