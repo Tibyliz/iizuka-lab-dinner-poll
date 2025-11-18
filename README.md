@@ -1,306 +1,487 @@
-# Iizuka Lab Group Dinner Poll System 🍜
+# 🍽️ Iizuka Lab Dinner Poll - Login Fix Version
 
-A comprehensive web-based poll system designed specifically for research groups to organize dinner gatherings with advanced features including percentage-based pricing, payment tracking, and poll archiving.
+## 🎉 Critical Login Bug Fixed!
 
-## 🌟 Key Features
-
-### Poll Collection
-- ✅ **Name Collection** - Gather respondent names
-- ✅ **Attendance Tracking** - Yes/No attendance selection
-- ✅ **Title/Position Selection** - Master Student, Doctoral Student, Teachers and Staff
-- ✅ **Date Availability (Optional)** - Select from 14 upcoming dates (fully optional, no dates required)
-- ✅ **Dynamic Title** - Customizable poll title with smart defaults
-
-### Admin Dashboard
-- ✅ **Real-time Statistics** - Total responses, attending, not attending, paid
-- ✅ **Visual Data Chart** - Interactive bar chart showing most popular dates
-- ✅ **Comprehensive Table** - View all responses with filtering and search
-- ✅ **Payment Tracking** - Checkbox system to track who has paid
-- ✅ **Multiple Filters** - Filter by attendance, payment status, or search by name
-
-### Percentage-Based Pricing System
-- ✅ **Flexible Cost Allocation** - Set percentages for each group (e.g., 20%, 30%, 50%)
-- ✅ **Automatic Calculation** - System calculates per-person cost based on attendance
-- ✅ **Real-time Preview** - See price breakdown before saving
-- ✅ **100% Validation** - Ensures percentages total exactly 100%
-
-### Poll Management & Archiving
-- ✅ **Save to Archive** - Save current poll with all data intact
-- ✅ **Start New Poll** - Begin fresh poll while preserving archives
-- ✅ **View Archives** - Browse all archived polls with statistics
-- ✅ **Restore Archives** - Recover any archived poll
-- ✅ **Export Archives** - Export archived data to XLSX
-- ✅ **Delete Archives** - Remove old archives permanently
-
-### Data Export
-- ✅ **CSV Export** - Simple comma-separated format
-- ✅ **XLSX Export** - Excel format with multiple sheets (responses + statistics)
-- ✅ **PDF Export** - Professional report format
-- ✅ **All Include Prices** - Exports contain calculated prices and payment status
-
-### Security & Settings
-- ✅ **Password Protection** - Secure admin access
-- ✅ **Changeable Password** - Update password anytime
-- ✅ **24-hour Sessions** - Automatic logout after 24 hours
-- ✅ **Data Persistence** - All data stored in browser localStorage
-
-## 🎨 Design Features
-
-- **Modern UI** - Beautiful gradient design with smooth animations
-- **Responsive Layout** - Works perfectly on mobile, tablet, and desktop
-- **Intuitive Navigation** - Easy-to-use interface for all users
-- **Professional Charts** - Chart.js powered visualizations
-- **Custom Icons** - Font Awesome icons throughout
-
-## 📁 Project Structure
-
-```
-dinner-poll-system/
-├── index.html              # Main poll form
-├── admin-login.html        # Admin authentication page
-├── admin.html              # Admin dashboard
-├── css/
-│   ├── style.css          # Poll form styles
-│   └── admin.css          # Admin dashboard styles
-└── js/
-    ├── poll.js            # Poll form logic
-    ├── login.js           # Authentication logic
-    └── admin.js           # Admin dashboard functionality
-```
-
-## 🚀 Quick Start
-
-### 1. Deployment
-1. Upload all files to your web server or GitHub Pages
-2. Maintain the folder structure (css/, js/)
-3. Ensure all files are in the root directory
-
-### 2. First Time Setup
-1. Visit `admin-login.html`
-2. Default password: **`iizukalab`**
-3. **Immediately change the password** in Settings
-
-### 3. Configure Poll
-1. Go to "Poll Title Settings" to customize the title
-2. Go to "Price Settings" to set up cost allocation
-3. Share the `index.html` link with your group
-
-### 4. Manage Responses
-1. View responses in the admin dashboard
-2. Track payments with checkboxes
-3. Export data when needed
-4. Archive poll when done
-
-## 💡 Usage Guide
-
-### For Participants
-
-1. **Open Poll Page** - Visit the shared index.html link
-2. **Fill Information**:
-   - Enter your name
-   - Select Yes/No for attendance
-   - Choose your title (Master/Doctoral/Staff)
-   - (Optional) Select available dates if attending
-3. **Submit** - Click the submit button
-4. **Done!** - See confirmation message
-
-**Note**: Date selection is completely optional. If you're attending but have no date preferences, simply don't select any dates.
-
-### For Administrators
-
-#### Managing Current Poll
-
-1. **Login** - Use admin-login.html with your password
-2. **View Dashboard** - See real-time statistics and chart
-3. **Track Payments** - Check boxes for paid attendees
-4. **Filter/Search** - Find specific responses
-5. **Export Data** - Download reports in various formats
-
-#### Price Configuration
-
-1. Click **"Price Settings"**
-2. Enter **Total Cost** (e.g., 10000)
-3. Set **Percentages**:
-   - Master Students: e.g., 20%
-   - Doctoral Students: e.g., 30%
-   - Teachers and Staff: e.g., 50%
-4. **Preview** prices automatically
-5. **Save** when total = 100%
-
-**Example**:
-- Total: ¥10,000
-- Master (20%): 4 people = ¥500/person
-- Doctoral (30%): 3 people = ¥1,000/person
-- Staff (50%): 2 people = ¥2,500/person
-
-#### Poll Archiving
-
-**Save Current Poll**:
-1. Click "Poll Management"
-2. Click "Save Current Poll to Archive"
-3. Enter archive name (e.g., "November 2024 Dinner")
-4. Current poll data is preserved
-
-**Start New Poll**:
-1. Click "Poll Management"
-2. Click "Start New Poll"
-3. Confirm (current responses will be cleared)
-4. Enter new poll name
-5. Begin collecting responses
-
-**Manage Archives**:
-- **View**: See all archived polls with statistics
-- **Restore**: Bring back an archived poll as current
-- **Export**: Download archived poll data
-- **Delete**: Permanently remove an archive
-
-## 🔐 Security Notes
-
-### Default Settings
-- **Default Password**: `iizukalab`
-- **Session Duration**: 24 hours
-- **Data Storage**: Browser localStorage
-
-### Best Practices
-1. **Change Password Immediately** after first login
-2. **Use Strong Password** - Mix of letters, numbers, symbols
-3. **Don't Share Admin Link** - Only share poll link (index.html)
-4. **Regular Backups** - Export data regularly
-5. **Fixed Device** - Use same computer for admin tasks
-
-### Data Privacy
-- All data stored locally in browser
-- No server-side storage
-- Data persists until manually cleared
-- Regular exports recommended for backup
-
-## 📊 Data Management
-
-### Storage
-- **Responses**: Stored in `poll_responses`
-- **Settings**: Stored in `admin_settings`
-- **Archives**: Stored in `poll_archives`
-- **Session**: Stored in `admin_session`
-
-### Backup Strategy
-1. **Regular Exports** - Weekly XLSX exports
-2. **Archive Old Polls** - Save completed polls
-3. **Keep Archives** - Don't delete until certain
-4. **Multiple Formats** - Export CSV, XLSX, and PDF
-
-## 🎯 Use Cases
-
-### Monthly Lab Dinners
-1. Create poll with month/year title
-2. Collect attendance and dates
-3. Find most popular date from chart
-4. Set pricing based on attendee types
-5. Track payments
-6. Archive for records
-
-### Special Events
-- Year-end celebrations
-- Welcome/farewell parties
-- Professor retirement dinners
-- Lab anniversaries
-
-### Semester Activities
-- Start of semester gatherings
-- Mid-term celebrations
-- End of semester parties
-
-## 🛠️ Technical Details
-
-### Technologies Used
-- **HTML5** - Semantic structure
-- **CSS3** - Modern styling with gradients and animations
-- **JavaScript (ES6)** - Core functionality
-- **Chart.js** - Data visualization
-- **SheetJS (XLSX)** - Excel export
-- **jsPDF** - PDF generation
-- **Font Awesome** - Icons
-- **localStorage API** - Data persistence
-
-### Browser Compatibility
-- ✅ Chrome/Edge (Recommended)
-- ✅ Firefox
-- ✅ Safari
-- ✅ Mobile browsers
-
-### Requirements
-- Modern web browser
-- JavaScript enabled
-- localStorage support
-- ~5MB storage space
-
-## ⚙️ Customization
-
-### Change Poll Duration
-Edit `generateDates()` in `poll.js`:
-```javascript
-for (let i = 0; i < 14; i++) {  // Change 14 to desired days
-```
-
-### Modify Title Options
-Edit HTML in `index.html` under "Title/Position" section.
-
-### Adjust Color Scheme
-Modify gradient colors in CSS files:
-```css
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-```
-
-## 🐛 Troubleshooting
-
-### Login Issues
-- **Solution**: Clear browser cache, use correct password
-- **Reset**: Inspect → Console → `localStorage.setItem('admin_password', 'iizukalab')`
-
-### Chart Not Displaying
-- **Solution**: Ensure Chart.js CDN is loading
-- **Check**: Browser console for errors
-
-### Data Not Saving
-- **Solution**: Check localStorage is enabled
-- **Fix**: Settings → Privacy → Allow site data
-
-### Export Not Working
-- **Solution**: Check XLSX/jsPDF libraries loaded
-- **Alternative**: Use CSV export
-
-## 📝 Changelog
-
-### Version 2.0 (Current)
-- ✅ Added poll archiving system
-- ✅ Implemented archive management (save/restore/export/delete)
-- ✅ Made date selection fully optional
-- ✅ Added current poll name display
-- ✅ Enhanced admin dashboard
-
-### Version 1.0
-- ✅ Basic poll functionality
-- ✅ Percentage-based pricing
-- ✅ Payment tracking
-- ✅ Data export features
-
-## 🎓 Credits
-
-**Created for**: Iizuka Lab, The University of Tokyo  
-**Purpose**: Research group dinner organization  
-**License**: Free to use and modify
-
-## 📞 Support
-
-For issues or questions:
-1. Check this README
-2. Review code comments
-3. Test in different browser
-4. Clear cache and retry
+This version fixes the critical bug where users couldn't login to the admin dashboard. The login system now works perfectly!
 
 ---
 
-**Version**: 2.0  
-**Last Updated**: November 2024  
-**Status**: ✅ Production Ready
+## 🚨 What Was Fixed
 
-Enjoy organizing your lab dinners! 🍜🎉
+### **Previous Issue:**
+- ❌ Login page gets stuck after clicking "Login"
+- ❌ Cannot access admin dashboard
+- ❌ No error messages or feedback
+- ❌ Session not working properly
+
+### **Now Fixed:**
+- ✅ **Login works smoothly** - Proper authentication flow
+- ✅ **Clear error messages** - Know exactly what went wrong
+- ✅ **Session management** - Stay logged in (24 hours)
+- ✅ **Admin dashboard access** - Full functionality restored
+- ✅ **Logout button** - Properly end session
+- ✅ **Debug logging** - Easy troubleshooting
+
+---
+
+## 📦 Complete Feature Set
+
+### **Respondent Page (index.html)**
+- Name input
+- Attendance selection (Yes/No)
+- Position selection (Bachelor/Master's/PhD/Faculty)
+- Multiple date selection (checkboxes)
+- Beautiful responsive design
+- Form validation
+- Submission to Google Sheets
+
+### **Admin Login (admin-login.html)** ⭐ **FIXED**
+- Beautiful login interface
+- Password authentication (default: `iizukalab`)
+- Error/success messages
+- Session management
+- Auto-redirect on success
+- Mobile responsive
+
+### **Admin Dashboard (admin.html)** ⭐ **FIXED**
+- **Statistics Cards:**
+  - Total responses
+  - Attending count
+  - Not attending count
+  - Total cost calculation
+
+- **Charts:**
+  - Position breakdown (pie chart)
+  - Date popularity (bar chart)
+
+- **Response Management:**
+  - View all responses in table
+  - Edit individual amounts
+  - Payment tracking (checkboxes)
+  - Smart cost redistribution
+
+- **Configuration:**
+  - Customize poll title
+  - Set date range (start/end)
+  - Auto-generate dates
+  - Pricing sliders (4 positions)
+
+- **Archive Management:**
+  - Save current poll to archive
+  - Start new vote (auto-archive + clear)
+  - View saved archives
+  - Restore from archive
+  - Export archives
+
+- **Export Options:**
+  - XLSX (Excel)
+  - PDF
+  - CSV
+
+### **Backend (Code.gs)**
+- Google Apps Script integration
+- RESTful API endpoints
+- CORS support
+- Data persistence in Google Sheets
+- Archive management
+- Config storage
+
+---
+
+## 🔐 Login Credentials
+
+**Admin Access:**
+- **URL:** `your-site.com/admin-login.html`
+- **Password:** `iizukalab` (default)
+- **Session:** 24 hours
+
+**To change password:**
+Edit `js/login.js` line 7:
+```javascript
+const DEFAULT_PASSWORD = 'your_new_password';
+```
+
+---
+
+## 🚀 Deployment
+
+### **Quick Update (If Already Deployed)**
+
+See **[QUICK_UPDATE_GUIDE.md](QUICK_UPDATE_GUIDE.md)** for 5-minute update process.
+
+**Summary:**
+1. Download 4 updated files
+2. Upload to GitHub Pages
+3. Test login
+4. Done! ✅
+
+---
+
+### **Fresh Deployment (New Setup)**
+
+#### **Step 1: Google Sheets Setup**
+
+1. **Create Google Sheet** with 3 sheets:
+
+**Sheet: "Responses"**
+```
+Timestamp | Name | Attendance | Position | Selected Dates | Payment Status | Custom Amount | Is Edited
+```
+
+**Sheet: "Config"**
+```
+Setting | Value
+Poll Title | Iizuka Lab Dinner Poll
+Start Date | 
+End Date | 
+Available Dates | 
+```
+
+**Sheet: "Archives"**
+```
+Archive Name | Created Date | Data
+(Created automatically)
+```
+
+#### **Step 2: Google Apps Script**
+
+1. Open Google Sheet
+2. Extensions → Apps Script
+3. Paste `Code.gs` content
+4. Deploy as Web App:
+   - Execute as: Me
+   - Who has access: Anyone
+5. Copy Web App URL
+
+#### **Step 3: Configure Frontend**
+
+Edit `js/sheets-api.js` line 5:
+```javascript
+const SCRIPT_URL = 'your_web_app_url_here';
+```
+
+#### **Step 4: Deploy Website**
+
+Upload all files to GitHub Pages (or any hosting):
+- HTML files (3)
+- CSS files (2)
+- JS files (4)
+- Documentation (optional)
+
+#### **Step 5: Test**
+
+1. Go to your website
+2. Submit test response
+3. Click "Admin" link
+4. Login with password: `iizukalab`
+5. Verify dashboard loads
+6. Check all features work
+
+---
+
+## 📁 File Structure
+
+```
+iizuka-lab-poll/
+├── index.html              (Respondent form)
+├── admin-login.html        (Login page) ⭐ FIXED
+├── admin.html              (Admin dashboard) ⭐ FIXED
+├── css/
+│   ├── style.css          (Form styles)
+│   └── admin.css          (Dashboard styles) ⭐ UPDATED
+├── js/
+│   ├── poll.js            (Form logic)
+│   ├── login.js           (Auth logic) ⭐ FIXED
+│   ├── admin.js           (Dashboard logic)
+│   └── sheets-api.js      (API wrapper)
+├── Code.gs                 (Google Apps Script)
+└── docs/
+    ├── README.md          (This file)
+    ├── LOGIN_FIX_GUIDE.md (Detailed login docs)
+    └── QUICK_UPDATE_GUIDE.md (Update instructions)
+```
+
+---
+
+## 🧪 Testing Checklist
+
+### **Login System (CRITICAL)**
+- [ ] Can access login page
+- [ ] Password `iizukalab` logs in successfully
+- [ ] Wrong password shows error
+- [ ] Successful login redirects to admin
+- [ ] Cannot access admin without login
+- [ ] Logout button works
+- [ ] Session persists (24 hours)
+
+### **Form Submission**
+- [ ] Can fill out form
+- [ ] Dates display correctly
+- [ ] Can submit form
+- [ ] Data appears in Google Sheets
+- [ ] Admin page shows submission
+
+### **Admin Features**
+- [ ] Statistics cards update
+- [ ] Charts display correctly
+- [ ] Response table shows data
+- [ ] Can edit amounts
+- [ ] Payment checkboxes work
+- [ ] Export buttons work
+- [ ] Date range generation works
+- [ ] Save to archive works
+- [ ] Start new vote works
+
+---
+
+## 🐛 Troubleshooting
+
+### **"Login page stuck"** ✅ FIXED
+**Solution:** Update to this version!
+
+### **"Wrong password" message**
+**Check:** Password is exactly `iizukalab` (lowercase, no spaces)
+
+### **"Please login first" alert**
+**Cause:** Trying to access admin.html without logging in  
+**Solution:** Go to admin-login.html first
+
+### **Session expired**
+**Cause:** More than 24 hours since login  
+**Solution:** Login again
+
+### **Form submission fails**
+**Check:**
+1. Web App URL configured in `sheets-api.js`
+2. Google Apps Script deployed with "Anyone" access
+3. Browser console (F12) for error messages
+
+### **Admin page empty**
+**Check:**
+1. Logged in successfully
+2. Google Sheets has "Responses" sheet
+3. At least one response submitted
+4. Web App URL correct
+
+---
+
+## 📊 Google Sheets Structure (Detailed)
+
+### **"Responses" Sheet**
+
+| Column | Name | Type | Example |
+|--------|------|------|---------|
+| A | Timestamp | Date/Time | 2024-12-15 10:30:00 |
+| B | Name | Text | John Doe |
+| C | Attendance | Text | "Yes, I'll attend" |
+| D | Position | Text | "PhD Student" |
+| E | Selected Dates | Text | "2024-12-20,2024-12-21" |
+| F | Payment Status | Boolean | true/false |
+| G | Custom Amount | Number | 2000 (or empty) |
+| H | Is Edited | Boolean | true/false |
+
+### **"Config" Sheet**
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| Poll Title | (text) | Display on form |
+| Start Date | YYYY-MM-DD | Date range start |
+| End Date | YYYY-MM-DD | Date range end |
+| Available Dates | CSV dates | Generated dates |
+
+### **"Archives" Sheet**
+
+Created automatically when saving archives.
+
+---
+
+## 💡 Usage Guide
+
+### **For Lab Members (Respondents)**
+
+1. Go to poll website
+2. Fill in:
+   - Your name
+   - Will you attend? (Yes/No)
+   - Your position (Bachelor/Master's/PhD/Faculty)
+   - Available dates (select all that work)
+3. Click "Submit Response"
+4. Done! ✅
+
+### **For Administrator**
+
+1. **Access Admin:**
+   - Click "Admin" link at bottom of poll
+   - Or go to: `your-site.com/admin-login.html`
+
+2. **Login:**
+   - Enter password: `iizukalab`
+   - Click "Login"
+
+3. **View Dashboard:**
+   - See statistics (total, attending, cost)
+   - View charts (positions, date popularity)
+   - Check response table
+
+4. **Manage Pricing:**
+   - Adjust percentage sliders
+   - Bachelor: 15% (default)
+   - Master's: 20% (default)
+   - PhD: 30% (default)
+   - Faculty: 50% (default)
+   - Click "Save Pricing"
+
+5. **Edit Individual Amounts:**
+   - Click on any amount in table
+   - Enter custom amount
+   - System auto-redistributes
+   - Click "Save Amount"
+
+6. **Track Payments:**
+   - Check boxes for paid members
+   - Filter by payment status
+
+7. **Configure Poll:**
+   - Change poll title
+   - Set date range
+   - Click "Generate Dates"
+
+8. **Export Data:**
+   - Click XLSX/PDF/CSV buttons
+   - Download formatted data
+
+9. **Archive Management:**
+   - "Save to Archive" - Backup current poll
+   - "Start New Vote" - Archive + clear for new poll
+
+10. **Logout:**
+    - Click "Logout" button
+    - Session cleared
+
+---
+
+## 🔧 Customization
+
+### **Change Colors**
+
+Edit CSS files:
+- `css/style.css` - Form colors
+- `css/admin.css` - Dashboard colors
+
+Look for gradient definitions:
+```css
+background: linear-gradient(135deg, #667eea, #764ba2);
+```
+
+### **Change Poll Questions**
+
+Edit `index.html`:
+- Modify question text
+- Add/remove fields
+- Change options
+
+### **Change Pricing Defaults**
+
+Edit `admin.html`:
+- Find pricing sliders
+- Change `value="X"` attributes
+
+### **Change Session Duration**
+
+Edit `js/login.js` line 9:
+```javascript
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+```
+
+---
+
+## 📚 Documentation
+
+- **[LOGIN_FIX_GUIDE.md](LOGIN_FIX_GUIDE.md)** - Detailed login system documentation
+- **[QUICK_UPDATE_GUIDE.md](QUICK_UPDATE_GUIDE.md)** - 5-minute update guide
+- **[README.md](README.md)** - This file (overview)
+
+---
+
+## 🎯 Key Features
+
+- ✅ **Working Login** - Fixed critical bug
+- ✅ **Google Sheets Integration** - Centralized data
+- ✅ **Beautiful UI** - Modern, professional design
+- ✅ **Mobile Responsive** - Works on all devices
+- ✅ **Date Popularity Chart** - See best dates
+- ✅ **Flexible Pricing** - Per-position percentages
+- ✅ **Editable Amounts** - Custom pricing per person
+- ✅ **Archive Management** - Historical data
+- ✅ **Export Options** - XLSX/PDF/CSV
+- ✅ **Session Security** - 24-hour sessions
+- ✅ **Debug Logging** - Easy troubleshooting
+
+---
+
+## 🆘 Support
+
+**If you encounter issues:**
+
+1. **Check documentation:**
+   - LOGIN_FIX_GUIDE.md for login issues
+   - QUICK_UPDATE_GUIDE.md for update help
+
+2. **Check browser console:**
+   - Press F12
+   - Look for error messages
+   - Read console logs
+
+3. **Clear browser data:**
+   - Ctrl+Shift+Delete
+   - Clear all
+   - Reload page
+
+4. **Try different browser:**
+   - Chrome
+   - Firefox
+   - Edge
+
+---
+
+## ✅ Success Criteria
+
+**Your system is working when:**
+
+- ✅ Can submit responses from form
+- ✅ Data appears in Google Sheets
+- ✅ Can login to admin dashboard
+- ✅ Dashboard shows statistics
+- ✅ Charts display correctly
+- ✅ Can edit amounts
+- ✅ Can track payments
+- ✅ Can export data
+- ✅ Can manage archives
+- ✅ No console errors
+
+---
+
+## 🎉 Credits
+
+**Project:** Iizuka Lab Dinner Poll System  
+**Purpose:** Streamline lab dinner planning  
+**Version:** 2.0 (Login Fix)  
+**Status:** ✅ Production Ready  
+
+**Key Improvement:** Fixed critical login bug that prevented admin access
+
+---
+
+## 📝 License
+
+MIT License - Free to use and modify for your lab's needs.
+
+---
+
+## 🚀 Get Started
+
+1. **Already deployed?** → See **QUICK_UPDATE_GUIDE.md**
+2. **Fresh setup?** → Follow deployment steps above
+3. **Need help?** → Check **LOGIN_FIX_GUIDE.md**
+
+**Your lab dinner planning just got easier!** 🎊
