@@ -1,0 +1,348 @@
+╔══════════════════════════════════════════════════════════════════════╗
+║                                                                      ║
+║               DEPLOYMENT CHECKLIST - EDITABLE PRICING                ║
+║                                                                      ║
+║    Use this checklist to ensure smooth deployment of the update     ║
+║                                                                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 1: PRE-DEPLOYMENT PREPARATION
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 1: Download All Files
+   □ Downloaded admin.html
+   □ Downloaded css/admin.css
+   □ Downloaded js/admin.js
+   □ Downloaded js/firebase-config.js
+   □ Downloaded js/firebase-api.js
+   
+□ STEP 2: Review Documentation
+   □ Read START_HERE.txt
+   □ Read UPDATE_SUMMARY.md
+   □ Read EDITABLE_PRICING_GUIDE.md
+   □ Understood the new features
+   
+□ STEP 3: Backup Current System
+   □ Backed up current admin.html
+   □ Backed up current css/admin.css
+   □ Backed up current js/admin.js
+   □ Created backup timestamp: _______________
+   
+□ STEP 4: Firebase Configuration
+   □ Have Firebase project credentials ready
+   □ Know Firebase database URL
+   □ Have API key ready
+   □ Firebase security rules configured
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 2: CONFIGURATION
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 5: Configure Firebase
+   □ Opened js/firebase-config.js
+   □ Replaced apiKey with actual value
+   □ Replaced authDomain with actual value
+   □ Replaced databaseURL with actual value
+   □ Replaced projectId with actual value
+   □ Replaced storageBucket with actual value
+   □ Replaced messagingSenderId with actual value
+   □ Replaced appId with actual value
+   □ Saved the file
+   
+□ STEP 6: Verify Configuration
+   □ No placeholder values remain
+   □ All URLs use correct Firebase project
+   □ File saved in UTF-8 encoding
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 3: DEPLOYMENT
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 7: Upload Files
+   □ Uploaded admin.html (replaced old version)
+   □ Uploaded css/admin.css (replaced old version)
+   □ Uploaded js/admin.js (replaced old version)
+   □ Uploaded js/firebase-config.js (configured)
+   □ Uploaded js/firebase-api.js (new file)
+   
+□ STEP 8: Verify Upload
+   □ All files present on server
+   □ File sizes match expected sizes
+   □ No upload errors occurred
+   □ Folder structure maintained (css/, js/)
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 4: TESTING
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 9: Basic Functionality Test
+   □ Website loads without errors
+   □ Admin login page accessible
+   □ Can login with password
+   □ Admin dashboard loads
+   □ No JavaScript errors in console (F12)
+   
+□ STEP 10: Pricing Configuration Test
+   □ Pricing section visible
+   □ All 4 position items displayed
+   □ Sliders are draggable
+   □ Input fields are clickable
+   □ Can type in input fields
+   
+□ STEP 11: Input Field Test
+   □ Can type in Bachelor input
+   □ Can type decimal (e.g., 17.5)
+   □ Input accepts numbers 0-100
+   □ Input rejects invalid values
+   
+□ STEP 12: Slider Test
+   □ Can drag Bachelor slider
+   □ Slider moves smoothly
+   □ Slider updates input field
+   □ No lag or delay
+   
+□ STEP 13: Two-Way Binding Test
+   □ Typing in input updates slider
+   □ Dragging slider updates input
+   □ Updates happen in real-time
+   □ No synchronization issues
+   
+□ STEP 14: Amount Calculation Test
+   □ Amounts display correctly
+   □ Amounts show ¥ symbol
+   □ Amounts update when % changes
+   □ Amounts formatted with commas
+   
+□ STEP 15: Total Validation Test
+   □ Total percentage displays
+   □ Total updates in real-time
+   □ Green checkmark when total = 100%
+   □ Red X when total ≠ 100%
+   □ Warning message appears when invalid
+   
+□ STEP 16: Save Functionality Test
+   □ Can click "Save Pricing" button
+   □ Success message appears
+   □ Values persist after save
+   □ Can refresh page and values remain
+   
+□ STEP 17: Decimal Precision Test
+   □ Can set value to 17.5%
+   □ Can set value to 22.5%
+   □ Can set value to 30.0%
+   □ Decimal values save correctly
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 5: ADVANCED TESTING
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 18: Mobile Responsive Test
+   □ Tested on mobile phone
+   □ Layout adjusts correctly
+   □ Touch interactions work
+   □ Input fields accessible on mobile
+   □ Sliders draggable with finger
+   
+□ STEP 19: Cross-Browser Test
+   □ Tested in Chrome
+   □ Tested in Firefox
+   □ Tested in Safari
+   □ Tested in Edge
+   □ No browser-specific issues
+   
+□ STEP 20: Integration Test
+   □ Pricing affects response table
+   □ Amounts in table update correctly
+   □ Custom amounts still work
+   □ Edit amount modal works
+   □ Payment tracking works
+   
+□ STEP 21: Firebase Integration Test
+   □ Data saves to Firebase
+   □ Data loads from Firebase
+   □ Decimal values persist correctly
+   □ No Firebase errors
+   □ Real-time updates work (if applicable)
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 6: USER ACCEPTANCE
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 22: User Training
+   □ Created user guide or training materials
+   □ Trained admin users on new feature
+   □ Demonstrated input field usage
+   □ Explained decimal precision
+   □ Showed total validation
+   
+□ STEP 23: User Feedback
+   □ Gathered initial user feedback
+   □ Users understand new feature
+   □ Users can use input fields
+   □ Users appreciate the improvement
+   
+□ STEP 24: Documentation Distribution
+   □ Shared EDITABLE_PRICING_GUIDE.md
+   □ Shared START_HERE.txt
+   □ Made README.md accessible
+   □ Users know where to find help
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 7: POST-DEPLOYMENT
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 25: Monitoring
+   □ Monitoring for errors (first 24 hours)
+   □ Checking Firebase usage
+   □ Watching for user issues
+   □ Reviewing console logs
+   
+□ STEP 26: Performance Check
+   □ Page load time acceptable (< 2 sec)
+   □ Input updates fast (< 50ms)
+   □ Firebase saves fast (< 500ms)
+   □ No performance degradation
+   
+□ STEP 27: Cleanup
+   □ Removed backup files (if safe)
+   □ Updated change log
+   □ Documented deployment date
+   □ Notified stakeholders of completion
+
+═══════════════════════════════════════════════════════════════════════
+PHASE 8: FINAL VERIFICATION
+═══════════════════════════════════════════════════════════════════════
+
+□ STEP 28: Complete Feature Verification
+   □ All input fields working
+   □ All sliders working
+   □ Two-way sync working
+   □ Validation working
+   □ Save/load working
+   □ Decimal support working
+   □ Mobile working
+   □ Cross-browser working
+   
+□ STEP 29: Documentation Verification
+   □ All documentation accessible
+   □ Users have access to guides
+   □ Contact info for support available
+   □ Known issues documented
+   
+□ STEP 30: Sign-Off
+   □ All tests passed
+   □ No critical issues
+   □ Users trained
+   □ Deployment successful
+   
+   Signed off by: ____________________
+   Date: ____________________
+   Role: ____________________
+
+═══════════════════════════════════════════════════════════════════════
+ROLLBACK PLAN (If needed)
+═══════════════════════════════════════════════════════════════════════
+
+If deployment fails or critical issues arise:
+
+□ STEP A: Immediate Rollback
+   □ Restore admin.html from backup
+   □ Restore css/admin.css from backup
+   □ Restore js/admin.js from backup
+   □ Verify old version works
+   
+□ STEP B: Document Issues
+   □ Document what went wrong
+   □ Capture error messages
+   □ Note affected features
+   □ Report to development team
+   
+□ STEP C: Plan Next Attempt
+   □ Fix identified issues
+   □ Plan new deployment time
+   □ Notify users of delay
+
+═══════════════════════════════════════════════════════════════════════
+NOTES & OBSERVATIONS
+═══════════════════════════════════════════════════════════════════════
+
+Deployment Date: ____________________
+
+Deployment Time: ____________________
+
+Server/Environment: ____________________
+
+Issues Encountered:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+Resolutions Applied:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+User Feedback:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+Lessons Learned:
+_____________________________________________________________________
+_____________________________________________________________________
+_____________________________________________________________________
+
+═══════════════════════════════════════════════════════════════════════
+SUCCESS CRITERIA
+═══════════════════════════════════════════════════════════════════════
+
+Deployment is successful when:
+
+□ All 30 steps completed
+□ All tests passed
+□ No critical bugs
+□ Users can access system
+□ New feature works as expected
+□ Performance is acceptable
+□ Documentation accessible
+□ Users trained
+□ Monitoring in place
+
+═══════════════════════════════════════════════════════════════════════
+QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════
+
+Files to Upload:
+• admin.html
+• css/admin.css
+• js/admin.js
+• js/firebase-config.js (configured!)
+• js/firebase-api.js
+
+Configuration File:
+• js/firebase-config.js (MUST configure before upload!)
+
+Documentation:
+• START_HERE.txt (quick start)
+• UPDATE_SUMMARY.md (deployment guide)
+• EDITABLE_PRICING_GUIDE.md (feature guide)
+• TESTING_CHECKLIST.md (testing procedures)
+
+Default Admin Password:
+• iizukalab (change in production!)
+
+Support:
+• Check browser console (F12)
+• Review documentation
+• Check Firebase console
+
+═══════════════════════════════════════════════════════════════════════
+
+🎉 READY TO DEPLOY!
+
+Follow this checklist step-by-step for smooth deployment.
+
+Good luck! 🚀
+
+═══════════════════════════════════════════════════════════════════════
