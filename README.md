@@ -1,487 +1,596 @@
-# 🍽️ Iizuka Lab Dinner Poll - Login Fix Version
+# 🎉 Iizuka Lab Dinner Poll - Firebase Version
 
-## 🎉 Critical Login Bug Fixed!
-
-This version fixes the critical bug where users couldn't login to the admin dashboard. The login system now works perfectly!
+**A complete, production-ready voting system powered by Firebase Realtime Database**
 
 ---
 
-## 🚨 What Was Fixed
+## 🌟 Why Firebase Version?
 
-### **Previous Issue:**
-- ❌ Login page gets stuck after clicking "Login"
-- ❌ Cannot access admin dashboard
-- ❌ No error messages or feedback
-- ❌ Session not working properly
+### ✅ **Problems with Google Sheets (Old Version)**
+- ❌ Constant CORS errors
+- ❌ Complex API deployment
+- ❌ "Anyone" vs "Anyone with Google account" confusion
+- ❌ Unreliable connection
+- ❌ Slow response times
+- ❌ Frequent debugging needed
 
-### **Now Fixed:**
-- ✅ **Login works smoothly** - Proper authentication flow
-- ✅ **Clear error messages** - Know exactly what went wrong
-- ✅ **Session management** - Stay logged in (24 hours)
-- ✅ **Admin dashboard access** - Full functionality restored
-- ✅ **Logout button** - Properly end session
-- ✅ **Debug logging** - Easy troubleshooting
-
----
-
-## 📦 Complete Feature Set
-
-### **Respondent Page (index.html)**
-- Name input
-- Attendance selection (Yes/No)
-- Position selection (Bachelor/Master's/PhD/Faculty)
-- Multiple date selection (checkboxes)
-- Beautiful responsive design
-- Form validation
-- Submission to Google Sheets
-
-### **Admin Login (admin-login.html)** ⭐ **FIXED**
-- Beautiful login interface
-- Password authentication (default: `iizukalab`)
-- Error/success messages
-- Session management
-- Auto-redirect on success
-- Mobile responsive
-
-### **Admin Dashboard (admin.html)** ⭐ **FIXED**
-- **Statistics Cards:**
-  - Total responses
-  - Attending count
-  - Not attending count
-  - Total cost calculation
-
-- **Charts:**
-  - Position breakdown (pie chart)
-  - Date popularity (bar chart)
-
-- **Response Management:**
-  - View all responses in table
-  - Edit individual amounts
-  - Payment tracking (checkboxes)
-  - Smart cost redistribution
-
-- **Configuration:**
-  - Customize poll title
-  - Set date range (start/end)
-  - Auto-generate dates
-  - Pricing sliders (4 positions)
-
-- **Archive Management:**
-  - Save current poll to archive
-  - Start new vote (auto-archive + clear)
-  - View saved archives
-  - Restore from archive
-  - Export archives
-
-- **Export Options:**
-  - XLSX (Excel)
-  - PDF
-  - CSV
-
-### **Backend (Code.gs)**
-- Google Apps Script integration
-- RESTful API endpoints
-- CORS support
-- Data persistence in Google Sheets
-- Archive management
-- Config storage
+### ✅ **Firebase Version Benefits**
+- ✅ **Zero CORS issues** - Works perfectly from day 1
+- ✅ **Simple setup** - Just paste config, no API deployment
+- ✅ **Real-time updates** - Dashboard updates automatically
+- ✅ **Faster** - Much better performance
+- ✅ **Reliable** - Industry-standard database
+- ✅ **Easier to maintain** - Professional solution
 
 ---
 
-## 🔐 Login Credentials
+## 📦 Features
 
-**Admin Access:**
-- **URL:** `your-site.com/admin-login.html`
-- **Password:** `iizukalab` (default)
-- **Session:** 24 hours
+### For Lab Members (Respondent Form)
+- ✅ Clean, intuitive poll form
+- ✅ Name, attendance, position selection
+- ✅ Multiple date selection
+- ✅ Mobile-friendly design
+- ✅ Instant submission confirmation
 
-**To change password:**
-Edit `js/login.js` line 7:
+### For Admin (Dashboard)
+- ✅ **Real-time updates** - See new submissions instantly! 🔄
+- ✅ **Statistics cards** - Total responses, attending, cost
+- ✅ **Attendance breakdown chart** - Position distribution
+- ✅ **Date popularity chart** ⭐ - See which dates work best
+- ✅ **Complete responses table** - All submission details
+- ✅ **Editable amounts** - Customize individual pricing
+- ✅ **Payment tracking** - Toggle payment status
+- ✅ **Pricing configuration** - 4 position-based sliders
+- ✅ **Poll configuration** - Title and date range
+- ✅ **Save to Archive** - Backup anytime
+- ✅ **Start New Vote** - Auto-archive and clear
+- ✅ **Archive management** - View, restore, delete
+- ✅ **Export data** - Excel, PDF, CSV formats
+
+---
+
+## 🚀 Quick Setup (15 Minutes)
+
+### **Step 1: Create Firebase Project (5 min)**
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Click "Add Project"
+3. Enter project name: "iizuka-lab-poll" (or your choice)
+4. Disable Google Analytics (optional)
+5. Click "Create Project"
+
+### **Step 2: Get Firebase Config (3 min)**
+
+1. In your Firebase project, click the gear icon ⚙️ → Project Settings
+2. Scroll to "Your apps" section
+3. Click the Web icon `</>` (or "Add app" if first time)
+4. Register app name: "Iizuka Lab Poll"
+5. Copy the `firebaseConfig` object
+
+Example:
 ```javascript
-const DEFAULT_PASSWORD = 'your_new_password';
+const firebaseConfig = {
+  apiKey: "AIzaSyB...",
+  authDomain: "iizuka-lab-poll.firebaseapp.com",
+  databaseURL: "https://iizuka-lab-poll-default-rtdb.firebaseio.com",
+  projectId: "iizuka-lab-poll",
+  storageBucket: "iizuka-lab-poll.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc123"
+};
 ```
 
----
+### **Step 3: Enable Realtime Database (2 min)**
 
-## 🚀 Deployment
+1. In Firebase Console, go to **Build** → **Realtime Database**
+2. Click "Create Database"
+3. Choose location closest to you (e.g., asia-northeast1)
+4. Start in **Test Mode** for now
+5. Click "Enable"
 
-### **Quick Update (If Already Deployed)**
+### **Step 4: Configure Database Rules (2 min)**
 
-See **[QUICK_UPDATE_GUIDE.md](QUICK_UPDATE_GUIDE.md)** for 5-minute update process.
+1. In Realtime Database, go to "Rules" tab
+2. Copy content from `database-rules.json` file
+3. Paste and publish
 
-**Summary:**
-1. Download 4 updated files
-2. Upload to GitHub Pages
-3. Test login
-4. Done! ✅
-
----
-
-### **Fresh Deployment (New Setup)**
-
-#### **Step 1: Google Sheets Setup**
-
-1. **Create Google Sheet** with 3 sheets:
-
-**Sheet: "Responses"**
-```
-Timestamp | Name | Attendance | Position | Selected Dates | Payment Status | Custom Amount | Is Edited
+Or use these simple rules for testing:
+```json
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
 ```
 
-**Sheet: "Config"**
-```
-Setting | Value
-Poll Title | Iizuka Lab Dinner Poll
-Start Date | 
-End Date | 
-Available Dates | 
-```
+### **Step 5: Configure Website (3 min)**
 
-**Sheet: "Archives"**
-```
-Archive Name | Created Date | Data
-(Created automatically)
-```
+1. Download all project files
+2. Open `js/firebase-config.js`
+3. Replace the placeholder config with YOUR Firebase config:
 
-#### **Step 2: Google Apps Script**
-
-1. Open Google Sheet
-2. Extensions → Apps Script
-3. Paste `Code.gs` content
-4. Deploy as Web App:
-   - Execute as: Me
-   - Who has access: Anyone
-5. Copy Web App URL
-
-#### **Step 3: Configure Frontend**
-
-Edit `js/sheets-api.js` line 5:
 ```javascript
-const SCRIPT_URL = 'your_web_app_url_here';
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 ```
 
-#### **Step 4: Deploy Website**
+4. Save the file
 
-Upload all files to GitHub Pages (or any hosting):
-- HTML files (3)
-- CSS files (2)
-- JS files (4)
-- Documentation (optional)
+### **Step 6: Deploy to GitHub Pages**
 
-#### **Step 5: Test**
-
-1. Go to your website
-2. Submit test response
-3. Click "Admin" link
-4. Login with password: `iizukalab`
-5. Verify dashboard loads
-6. Check all features work
+1. Create GitHub repository (or use existing)
+2. Upload ALL files maintaining structure:
+   ```
+   /index.html
+   /admin-login.html
+   /admin.html
+   /css/style.css
+   /css/admin.css
+   /js/firebase-config.js
+   /js/firebase-api.js
+   /js/poll.js
+   /js/login.js
+   /js/admin.js
+   /database-rules.json
+   ```
+3. Enable GitHub Pages in repository settings
+4. Wait 1-2 minutes for deployment
+5. Done! 🎉
 
 ---
 
-## 📁 File Structure
+## 🧪 Testing Your Setup
+
+### Test 1: Respondent Form
+1. Go to `your-site.com/index.html`
+2. Fill in name, attendance, position
+3. Select some dates (if configured)
+4. Click Submit
+5. Should see success message ✅
+6. Check Firebase Console → Realtime Database → Data
+7. You should see your response under `/responses/`
+
+### Test 2: Admin Login
+1. Go to `your-site.com/admin-login.html`
+2. Enter password: **iizukalab**
+3. Click Login
+4. Should redirect to dashboard ✅
+
+### Test 3: Admin Dashboard
+1. After login, dashboard should load in 2-3 seconds
+2. Should see:
+   - Statistics cards with correct numbers
+   - Attendance breakdown chart
+   - Date popularity chart (if dates configured)
+   - Your test response in table
+3. Try toggling payment checkbox - should save
+4. Click an amount - edit modal should open
+5. Try all features!
+
+---
+
+## 📚 File Structure
 
 ```
 iizuka-lab-poll/
-├── index.html              (Respondent form)
-├── admin-login.html        (Login page) ⭐ FIXED
-├── admin.html              (Admin dashboard) ⭐ FIXED
+├── index.html              # Respondent poll form
+├── admin-login.html        # Admin authentication
+├── admin.html              # Admin dashboard
+│
 ├── css/
-│   ├── style.css          (Form styles)
-│   └── admin.css          (Dashboard styles) ⭐ UPDATED
+│   ├── style.css           # Respondent form styles
+│   └── admin.css           # Admin dashboard styles
+│
 ├── js/
-│   ├── poll.js            (Form logic)
-│   ├── login.js           (Auth logic) ⭐ FIXED
-│   ├── admin.js           (Dashboard logic)
-│   └── sheets-api.js      (API wrapper)
-├── Code.gs                 (Google Apps Script)
-└── docs/
-    ├── README.md          (This file)
-    ├── LOGIN_FIX_GUIDE.md (Detailed login docs)
-    └── QUICK_UPDATE_GUIDE.md (Update instructions)
+│   ├── firebase-config.js  # Firebase configuration (EDIT THIS!)
+│   ├── firebase-api.js     # Database API wrapper
+│   ├── poll.js             # Respondent form logic
+│   ├── login.js            # Authentication logic
+│   └── admin.js            # Dashboard logic
+│
+├── database-rules.json     # Firebase security rules
+└── README.md              # This file
 ```
 
 ---
 
-## 🧪 Testing Checklist
+## 🔐 Admin Access
 
-### **Login System (CRITICAL)**
-- [ ] Can access login page
-- [ ] Password `iizukalab` logs in successfully
-- [ ] Wrong password shows error
-- [ ] Successful login redirects to admin
-- [ ] Cannot access admin without login
-- [ ] Logout button works
-- [ ] Session persists (24 hours)
+- **Password:** `iizukalab`
+- **Session Duration:** 24 hours
+- **Login URL:** `your-site.com/admin-login.html`
 
-### **Form Submission**
-- [ ] Can fill out form
-- [ ] Dates display correctly
-- [ ] Can submit form
-- [ ] Data appears in Google Sheets
-- [ ] Admin page shows submission
-
-### **Admin Features**
-- [ ] Statistics cards update
-- [ ] Charts display correctly
-- [ ] Response table shows data
-- [ ] Can edit amounts
-- [ ] Payment checkboxes work
-- [ ] Export buttons work
-- [ ] Date range generation works
-- [ ] Save to archive works
-- [ ] Start new vote works
+To change password, edit `js/login.js` line 7:
+```javascript
+const ADMIN_PASSWORD = 'yournewpassword';
+```
 
 ---
 
-## 🐛 Troubleshooting
+## 🎯 Key Features Guide
 
-### **"Login page stuck"** ✅ FIXED
-**Solution:** Update to this version!
+### 1. Date Popularity Chart ⭐
 
-### **"Wrong password" message**
-**Check:** Password is exactly `iizukalab` (lowercase, no spaces)
+**What it does:**
+Shows how many people selected each available date - helps you choose the optimal date for your event!
 
-### **"Please login first" alert**
-**Cause:** Trying to access admin.html without logging in  
-**Solution:** Go to admin-login.html first
+**How to use:**
+1. Configure available dates in admin dashboard
+2. Lab members submit their responses
+3. Chart automatically updates showing:
+   - Each date on X-axis
+   - Number of people on Y-axis
+   - Visual bars showing popularity
 
-### **Session expired**
-**Cause:** More than 24 hours since login  
-**Solution:** Login again
+**Example:**
+If 10 people select Dec 15, 5 select Dec 16, and 8 select Dec 17, the chart clearly shows Dec 15 is the most popular date!
 
-### **Form submission fails**
-**Check:**
-1. Web App URL configured in `sheets-api.js`
-2. Google Apps Script deployed with "Anyone" access
-3. Browser console (F12) for error messages
+### 2. Save to Archive 💾
 
-### **Admin page empty**
-**Check:**
-1. Logged in successfully
-2. Google Sheets has "Responses" sheet
-3. At least one response submitted
-4. Web App URL correct
+**What it does:**
+Creates a backup of current poll without clearing data
+
+**When to use:**
+- Weekly backups
+- Before making major changes
+- Milestone saves
+- Keeping records
+
+**How to use:**
+1. Click "Save to Archive" button
+2. Enter archive name
+3. Done! Current data backed up
+4. Poll remains active
+
+### 3. Start New Vote 🔄
+
+**What it does:**
+Automatically saves current poll to archives and clears all responses for a fresh start
+
+**When to use:**
+- Monthly lab dinners
+- New semester events
+- Quarterly meetings
+- Recurring events
+
+**How to use:**
+1. Click "Start New Vote" button
+2. Confirm the action
+3. System automatically:
+   - Saves current poll to archives
+   - Clears all responses
+   - Keeps configuration
+4. Ready for new poll!
+
+### 4. Real-Time Updates 🔄
+
+**What it does:**
+Dashboard automatically updates when new submissions arrive - no refresh needed!
+
+**How it works:**
+- Firebase listeners detect changes
+- Dashboard updates statistics instantly
+- Charts redraw automatically
+- Table shows new responses
+
+**Benefits:**
+- See submissions as they come in
+- No manual refresh needed
+- Monitor poll progress live
+- Perfect for time-sensitive events
+
+### 5. Editable Amounts ✏️
+
+**What it does:**
+Customize payment amount for individual people
+
+**When to use:**
+- Student with financial hardship
+- Faculty member paying more
+- Special circumstances
+- Flexible pricing needed
+
+**How to use:**
+1. Click on any amount in the table
+2. Edit modal opens
+3. Enter new amount (or leave empty to reset)
+4. Click Save
+5. System automatically redistributes remaining cost
 
 ---
 
-## 📊 Google Sheets Structure (Detailed)
+## 📊 Database Structure
 
-### **"Responses" Sheet**
+### Firebase Realtime Database:
 
-| Column | Name | Type | Example |
-|--------|------|------|---------|
-| A | Timestamp | Date/Time | 2024-12-15 10:30:00 |
-| B | Name | Text | John Doe |
-| C | Attendance | Text | "Yes, I'll attend" |
-| D | Position | Text | "PhD Student" |
-| E | Selected Dates | Text | "2024-12-20,2024-12-21" |
-| F | Payment Status | Boolean | true/false |
-| G | Custom Amount | Number | 2000 (or empty) |
-| H | Is Edited | Boolean | true/false |
-
-### **"Config" Sheet**
-
-| Setting | Value | Purpose |
-|---------|-------|---------|
-| Poll Title | (text) | Display on form |
-| Start Date | YYYY-MM-DD | Date range start |
-| End Date | YYYY-MM-DD | Date range end |
-| Available Dates | CSV dates | Generated dates |
-
-### **"Archives" Sheet**
-
-Created automatically when saving archives.
+```
+iizuka-lab-poll/
+├── config/
+│   ├── pollTitle: "Iizuka Lab Dinner Poll"
+│   ├── basePrice: 10000
+│   ├── bachelorPercent: 15
+│   ├── masterPercent: 20
+│   ├── phdPercent: 30
+│   ├── facultyPercent: 35
+│   ├── startDate: "2024-12-15"
+│   ├── endDate: "2024-12-29"
+│   └── availableDates: "2024-12-15,2024-12-16,..."
+│
+├── responses/
+│   ├── -NxYz123ABC/
+│   │   ├── timestamp: 1702896543210
+│   │   ├── name: "John Doe"
+│   │   ├── attendance: "Yes, I'll attend"
+│   │   ├── position: "PhD Student"
+│   │   ├── selectedDates: "2024-12-15, 2024-12-16"
+│   │   ├── paymentStatus: false
+│   │   ├── customAmount: null
+│   │   └── isEdited: false
+│   └── ...
+│
+└── archives/
+    ├── -NxYz789DEF/
+    │   ├── archiveName: "December Dinner - 2024-12-15"
+    │   ├── createdDate: 1702896543210
+    │   └── archiveData: "{...}"
+    └── ...
+```
 
 ---
 
-## 💡 Usage Guide
+## ⚙️ Configuration
 
-### **For Lab Members (Respondents)**
+### Pricing System
 
-1. Go to poll website
-2. Fill in:
-   - Your name
-   - Will you attend? (Yes/No)
-   - Your position (Bachelor/Master's/PhD/Faculty)
-   - Available dates (select all that work)
-3. Click "Submit Response"
-4. Done! ✅
+The system uses percentage-based pricing:
+- **Base Price:** Total event cost (e.g., ¥10,000)
+- **Position Percentages:** What each group pays
+  - Bachelor Students: 15% (configurable)
+  - Master's Students: 20% (configurable)
+  - PhD Students: 30% (configurable)
+  - Faculty/Staff: 35% (configurable)
 
-### **For Administrator**
+**Example Calculation:**
+- Base Price: ¥10,000
+- 2 Master's (20% each) + 3 PhDs (30% each)
+- Total %: (2×20) + (3×30) = 130%
+- Master's cost: (10000 × 20) / 130 = ¥1,538 each
+- PhD cost: (10000 × 30) / 130 = ¥2,308 each
 
-1. **Access Admin:**
-   - Click "Admin" link at bottom of poll
-   - Or go to: `your-site.com/admin-login.html`
+### Date Range Configuration
 
-2. **Login:**
-   - Enter password: `iizukalab`
-   - Click "Login"
+**Two ways to set dates:**
 
-3. **View Dashboard:**
-   - See statistics (total, attending, cost)
-   - View charts (positions, date popularity)
-   - Check response table
-
-4. **Manage Pricing:**
-   - Adjust percentage sliders
-   - Bachelor: 15% (default)
-   - Master's: 20% (default)
-   - PhD: 30% (default)
-   - Faculty: 50% (default)
-   - Click "Save Pricing"
-
-5. **Edit Individual Amounts:**
-   - Click on any amount in table
-   - Enter custom amount
-   - System auto-redistributes
-   - Click "Save Amount"
-
-6. **Track Payments:**
-   - Check boxes for paid members
-   - Filter by payment status
-
-7. **Configure Poll:**
-   - Change poll title
-   - Set date range
+1. **Date Range Generator (Recommended):**
+   - Set start date and end date
    - Click "Generate Dates"
+   - All dates in between are added
+   - Example: Dec 15 to Dec 29 = 15 dates
 
-8. **Export Data:**
-   - Click XLSX/PDF/CSV buttons
-   - Download formatted data
-
-9. **Archive Management:**
-   - "Save to Archive" - Backup current poll
-   - "Start New Vote" - Archive + clear for new poll
-
-10. **Logout:**
-    - Click "Logout" button
-    - Session cleared
+2. **Manual Configuration:**
+   - Edit availableDates in database
+   - Format: "YYYY-MM-DD,YYYY-MM-DD,..."
 
 ---
 
 ## 🔧 Customization
 
-### **Change Colors**
+### Change Colors
 
-Edit CSS files:
-- `css/style.css` - Form colors
-- `css/admin.css` - Dashboard colors
-
-Look for gradient definitions:
+Edit `css/style.css` or `css/admin.css`:
 ```css
-background: linear-gradient(135deg, #667eea, #764ba2);
+/* Main color scheme */
+--primary-color: #667eea;
+--secondary-color: #764ba2;
 ```
 
-### **Change Poll Questions**
+### Change Default Password
 
-Edit `index.html`:
-- Modify question text
-- Add/remove fields
-- Change options
-
-### **Change Pricing Defaults**
-
-Edit `admin.html`:
-- Find pricing sliders
-- Change `value="X"` attributes
-
-### **Change Session Duration**
-
-Edit `js/login.js` line 9:
+Edit `js/login.js`:
 ```javascript
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const ADMIN_PASSWORD = 'yournewpassword';
 ```
 
----
+### Change Session Duration
 
-## 📚 Documentation
+Edit `js/login.js` and `js/admin.js`:
+```javascript
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+```
 
-- **[LOGIN_FIX_GUIDE.md](LOGIN_FIX_GUIDE.md)** - Detailed login system documentation
-- **[QUICK_UPDATE_GUIDE.md](QUICK_UPDATE_GUIDE.md)** - 5-minute update guide
-- **[README.md](README.md)** - This file (overview)
+### Modify Position Categories
 
----
-
-## 🎯 Key Features
-
-- ✅ **Working Login** - Fixed critical bug
-- ✅ **Google Sheets Integration** - Centralized data
-- ✅ **Beautiful UI** - Modern, professional design
-- ✅ **Mobile Responsive** - Works on all devices
-- ✅ **Date Popularity Chart** - See best dates
-- ✅ **Flexible Pricing** - Per-position percentages
-- ✅ **Editable Amounts** - Custom pricing per person
-- ✅ **Archive Management** - Historical data
-- ✅ **Export Options** - XLSX/PDF/CSV
-- ✅ **Session Security** - 24-hour sessions
-- ✅ **Debug Logging** - Easy troubleshooting
+Edit in multiple files:
+1. `index.html` - Add option to select dropdown
+2. `admin.html` - Add pricing slider
+3. `js/admin.js` - Add to percentage calculations
 
 ---
 
-## 🆘 Support
+## 🆘 Troubleshooting
 
-**If you encounter issues:**
+### Problem: Dashboard stuck loading
 
-1. **Check documentation:**
-   - LOGIN_FIX_GUIDE.md for login issues
-   - QUICK_UPDATE_GUIDE.md for update help
+**Solution:**
+1. Open browser console (F12)
+2. Check for errors
+3. Verify Firebase config in `firebase-config.js`
+4. Check database rules allow read/write
+5. Test Firebase connection in console:
+   ```javascript
+   firebase.database().ref('.info/connected').once('value')
+   ```
 
-2. **Check browser console:**
-   - Press F12
-   - Look for error messages
-   - Read console logs
+### Problem: No data appearing
 
-3. **Clear browser data:**
-   - Ctrl+Shift+Delete
-   - Clear all
-   - Reload page
+**Solution:**
+1. Check Firebase Console → Realtime Database → Data
+2. Verify data exists
+3. Check database rules
+4. Clear browser cache (Ctrl+Shift+Del)
+5. Try incognito window
 
-4. **Try different browser:**
-   - Chrome
-   - Firefox
-   - Edge
+### Problem: CORS errors
+
+**Solution:**
+This shouldn't happen with Firebase! If you see CORS errors:
+1. You might be using Google Sheets version by mistake
+2. Verify you're using `firebase-config.js` not sheets API
+3. Check Firebase SDK is loaded (see browser console)
+
+### Problem: Real-time updates not working
+
+**Solution:**
+1. Check internet connection
+2. Verify Firebase Realtime Database is enabled
+3. Check listeners are setup (see console logs)
+4. Try refreshing page
 
 ---
 
-## ✅ Success Criteria
+## 🚀 Deployment Options
 
-**Your system is working when:**
+### Option 1: GitHub Pages (Recommended)
+- Free
+- Easy setup
+- Automatic HTTPS
+- Custom domain support
 
-- ✅ Can submit responses from form
-- ✅ Data appears in Google Sheets
-- ✅ Can login to admin dashboard
-- ✅ Dashboard shows statistics
-- ✅ Charts display correctly
-- ✅ Can edit amounts
-- ✅ Can track payments
-- ✅ Can export data
-- ✅ Can manage archives
-- ✅ No console errors
+### Option 2: Netlify
+- Free tier available
+- Drag-and-drop deployment
+- Automatic deploys from Git
+- Custom domain support
+
+### Option 3: Vercel
+- Free for personal projects
+- Git integration
+- Instant deployment
+- Analytics included
+
+### Option 4: Firebase Hosting
+- Perfect match with Firebase Database
+- Free tier available
+- CDN included
+- Easy deployment
 
 ---
 
-## 🎉 Credits
+## 📈 Scaling
 
-**Project:** Iizuka Lab Dinner Poll System  
-**Purpose:** Streamline lab dinner planning  
-**Version:** 2.0 (Login Fix)  
-**Status:** ✅ Production Ready  
+### Current Limits (Firebase Free Tier):
+- **Storage:** 1 GB
+- **Downloads:** 10 GB/month
+- **Connections:** 100 simultaneous
 
-**Key Improvement:** Fixed critical login bug that prevented admin access
+For Iizuka Lab (estimated 50-100 users):
+- ✅ Well within limits
+- ✅ No cost for normal usage
+- ✅ Can handle hundreds of responses
+
+If you outgrow free tier:
+- Upgrade to Spark Plan (pay-as-you-go)
+- Still very affordable for small lab
+
+---
+
+## 🎓 For Developers
+
+### Technology Stack
+- **Frontend:** Vanilla HTML/CSS/JavaScript
+- **Database:** Firebase Realtime Database
+- **Charts:** Chart.js 4.4.0
+- **Export:** SheetJS (XLSX), jsPDF
+- **Icons:** Font Awesome 6.4.0
+
+### Code Architecture
+- **firebase-config.js:** Configuration
+- **firebase-api.js:** Database abstraction layer
+- **poll.js:** Respondent form controller
+- **admin.js:** Dashboard controller with real-time listeners
+
+### API Methods
+
+```javascript
+// Config
+await api.getConfig(key)
+await api.setConfig(key, value)
+await api.updateConfig(updates)
+
+// Responses
+await api.getAllResponses()
+await api.addResponse(data)
+await api.updateResponse(id, updates)
+await api.deleteResponse(id)
+await api.clearAllResponses()
+
+// Real-time listeners
+api.onResponsesChange(callback)
+api.onConfigChange(callback)
+api.offResponsesChange()
+api.offConfigChange()
+
+// Archives
+await api.getAllArchives()
+await api.saveArchive(name, data)
+await api.restoreArchive(id)
+await api.deleteArchive(id)
+
+// Utility
+await api.initializeDefaultConfig()
+await api.testConnection()
+```
 
 ---
 
 ## 📝 License
 
-MIT License - Free to use and modify for your lab's needs.
+This project is created for Iizuka Lab at The University of Tokyo.
+Feel free to modify and use for your needs.
 
 ---
 
-## 🚀 Get Started
+## 🙏 Credits
 
-1. **Already deployed?** → See **QUICK_UPDATE_GUIDE.md**
-2. **Fresh setup?** → Follow deployment steps above
-3. **Need help?** → Check **LOGIN_FIX_GUIDE.md**
+- **Firebase:** Google's real-time database platform
+- **Chart.js:** Beautiful charts library
+- **Font Awesome:** Icon library
+- **SheetJS:** Excel export functionality
+- **jsPDF:** PDF generation library
 
-**Your lab dinner planning just got easier!** 🎊
+---
+
+## 📞 Support
+
+For issues or questions:
+1. Check this README first
+2. Review troubleshooting section
+3. Check browser console for errors
+4. Review Firebase Console for data issues
+
+---
+
+## 🎉 Enjoy Your Poll System!
+
+This Firebase-powered system is:
+- ✅ Production-ready
+- ✅ Zero CORS issues
+- ✅ Real-time updates
+- ✅ Easy to maintain
+- ✅ Professional quality
+
+**No more Google Sheets headaches!** 🎊
+
+---
+
+**Last Updated:** 2024-12
+**Version:** 1.0.0 (Firebase Edition)
