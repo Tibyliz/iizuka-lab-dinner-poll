@@ -1,900 +1,549 @@
-// Admin Dashboard Controller - Enhanced with Editable Pricing Inputs
-// Two-way binding between sliders and input fields with decimal support
-
+// Admin Dashboard Logic with Editable Pricing
 console.log('[Admin] Script loaded');
 
-// Global state
+// Check authentication
+if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    console.log('[Admin] Not logged in, redirecting...');
+    window.location.href = 'admin-login.html';
+}
+
+// Global variables
 let responses = [];
-let archives = [];
-let config = {
-    pollTitle: 'Iizuka Lab Dinner Poll',
-    basePrice: 10000,
-    pricing: {
-        bachelor: 15,
-        master: 20,
-        phd: 30,
-        faculty: 35
-    }
-};
+let config = null;
+let charts = {};
 
-let charts = {
-    position: null,
-    datePopularity: null
-};
+// DOM Elements
+const loadingMessage = document.getElementById('loading-message');
+const dashboardContent = document.getElementById('dashboard-content');
 
-let currentEditingResponseId = null;
-
-// Initialize dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('[Admin] Dashboard initializing...');
-    
-    // Check authentication
-    if (!checkAuth()) {
-        window.location.href = 'admin-login.html';
-        return;
-    }
-
-    // Initialize pricing controls with two-way binding
-    initializePricingControls();
-    
-    // Initialize other event listeners
-    initializeEventListeners();
-    
-    // Load data
-    await loadDashboardData();
-    
-    // Hide loading overlay
-    hideLoading();
-    
-    console.log('[Admin] Dashboard ready!');
-});
-
-// Authentication check
-function checkAuth() {
-    return sessionStorage.getItem('adminLoggedIn') === 'true';
-}
-
-// Initialize pricing controls with two-way binding
-function initializePricingControls() {
-    console.log('[Admin] Initializing pricing controls with two-way binding...');
-    
-    const positions = ['bachelor', 'master', 'phd', 'faculty'];
-    
-    positions.forEach(position => {
-        const slider = document.getElementById(`${position}Slider`);
-        const input = document.getElementById(`${position}Input`);
-        
-        if (!slider || !input) {
-            console.error(`[Admin] Missing slider or input for ${position}`);
-            return;
-        }
-        
-        // Slider → Input (two-way binding)
-        slider.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value);
-            input.value = value;
-            config.pricing[position] = value;
-            updatePricingDisplay();
-            updateTotalValidation();
-        });
-        
-        // Input → Slider (two-way binding)
-        input.addEventListener('input', (e) => {
-            let value = parseFloat(e.target.value);
-            
-            // Validate range
-            if (isNaN(value) || value < 0) value = 0;
-            if (value > 100) value = 100;
-            
-            // Round to nearest 0.5 for better UX
-            value = Math.round(value * 2) / 2;
-            
-            e.target.value = value;
-            slider.value = value;
-            config.pricing[position] = value;
-            updatePricingDisplay();
-            updateTotalValidation();
-        });
-        
-        // Blur event for final validation
-        input.addEventListener('blur', (e) => {
-            let value = parseFloat(e.target.value);
-            if (isNaN(value)) value = 0;
-            value = Math.round(value * 2) / 2;
-            e.target.value = value;
-            slider.value = value;
-            config.pricing[position] = value;
-            updatePricingDisplay();
-            updateTotalValidation();
-        });
-    });
-    
-    // Base price input
-    const basePriceInput = document.getElementById('basePrice');
-    if (basePriceInput) {
-        basePriceInput.addEventListener('input', (e) => {
-            let value = parseInt(e.target.value);
-            if (isNaN(value) || value < 0) value = 0;
-            config.basePrice = value;
-            updatePricingDisplay();
-        });
-    }
-    
-    console.log('[Admin] Pricing controls initialized with two-way binding');
-}
-
-// Update pricing display (amounts per position)
-function updatePricingDisplay() {
-    const positions = ['bachelor', 'master', 'phd', 'faculty'];
-    
-    positions.forEach(position => {
-        const amountElement = document.getElementById(`${position}Amount`);
-        if (amountElement) {
-            const percentage = config.pricing[position];
-            const amount = Math.round((config.basePrice * percentage) / 100);
-            amountElement.textContent = `¥${amount.toLocaleString()}`;
-        }
-    });
-}
-
-// Update total percentage validation
-function updateTotalValidation() {
-    const total = Object.values(config.pricing).reduce((sum, val) => sum + val, 0);
-    const totalValueElement = document.getElementById('totalPercentValue');
-    const totalIconElement = document.getElementById('totalValidIcon');
-    const totalWarningElement = document.getElementById('totalWarning');
-    
-    if (totalValueElement) {
-        totalValueElement.textContent = `${total.toFixed(1)}%`;
-    }
-    
-    const isValid = Math.abs(total - 100) < 0.1; // Allow 0.1% tolerance for floating point
-    
-    if (totalIconElement) {
-        if (isValid) {
-            totalIconElement.className = 'fas fa-check-circle total-icon valid';
-        } else {
-            totalIconElement.className = 'fas fa-exclamation-circle total-icon invalid';
-        }
-    }
-    
-    if (totalWarningElement) {
-        totalWarningElement.style.display = isValid ? 'none' : 'flex';
-    }
-    
-    return isValid;
-}
-
-// Initialize all event listeners
-function initializeEventListeners() {
-    // Header actions
-    document.getElementById('startNewVoteBtn').addEventListener('click', startNewVote);
-    document.getElementById('saveArchiveBtn').addEventListener('click', saveArchiveManually);
-    document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
-    document.getElementById('logoutBtn').addEventListener('click', logout);
-    
-    // Export buttons
-    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
-    document.getElementById('exportPdfBtn').addEventListener('click', exportToPdf);
-    document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
-    
-    // Filter controls
-    document.getElementById('filterPaidOnly').addEventListener('change', filterResponses);
-    document.getElementById('filterUnpaidOnly').addEventListener('change', filterResponses);
-    
-    // Save pricing button
-    document.getElementById('savePricingBtn').addEventListener('click', savePricingConfig);
-    
-    // Poll configuration
-    document.getElementById('generateDatesBtn').addEventListener('click', generateDates);
-    document.getElementById('saveConfigBtn').addEventListener('click', saveConfig);
-    
-    // Modal close
-    const modal = document.getElementById('editAmountModal');
-    const closeBtn = modal.querySelector('.close');
-    closeBtn.addEventListener('click', () => modal.style.display = 'none');
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) modal.style.display = 'none';
-    });
-    
-    // Modal actions
-    document.getElementById('saveAmountBtn').addEventListener('click', saveCustomAmount);
-    document.getElementById('resetAmountBtn').addEventListener('click', resetAmount);
-}
-
-// Load all dashboard data
-async function loadDashboardData() {
+// Initialize dashboard
+async function initializeDashboard() {
     try {
-        showLoading('Loading dashboard data...');
+        console.log('[Admin] Initializing dashboard...');
         
-        // Load config
-        await loadConfig();
+        await firebaseAPI.initializeConfig();
+        await loadAllData();
+        setupEventListeners();
+        setupPricingControls();
         
-        // Load responses
-        await loadResponses();
+        loadingMessage.style.display = 'none';
+        dashboardContent.style.display = 'block';
         
-        // Load archives
-        await loadArchives();
+        console.log('[Admin] Dashboard ready');
         
-        // Update UI
-        updateStatistics();
-        updateCharts();
-        updateResponsesTable();
-        updateArchivesList();
-        
-        hideLoading();
-        showToast('Dashboard loaded successfully!', 'success');
     } catch (error) {
-        console.error('[Admin] Error loading dashboard:', error);
-        hideLoading();
-        showToast('Error loading dashboard: ' + error.message, 'error');
+        console.error('[Admin] Initialization error:', error);
+        alert('Failed to load dashboard. Please check your Firebase configuration.');
     }
 }
 
-// Load configuration from Firebase
-async function loadConfig() {
-    try {
-        console.log('[Admin] Loading config...');
-        const data = await firebaseAPI.getConfig();
-        
-        if (data) {
-            config = {
-                pollTitle: data.pollTitle || 'Iizuka Lab Dinner Poll',
-                startDate: data.startDate || '',
-                endDate: data.endDate || '',
-                basePrice: data.basePrice || 10000,
-                pricing: data.pricing || {
-                    bachelor: 15,
-                    master: 20,
-                    phd: 30,
-                    faculty: 35
-                }
-            };
-            
-            // Update UI
-            document.getElementById('pollTitle').value = config.pollTitle;
-            document.getElementById('startDate').value = config.startDate;
-            document.getElementById('endDate').value = config.endDate;
-            document.getElementById('basePrice').value = config.basePrice;
-            
-            // Update pricing controls
-            ['bachelor', 'master', 'phd', 'faculty'].forEach(position => {
-                const value = config.pricing[position];
-                document.getElementById(`${position}Slider`).value = value;
-                document.getElementById(`${position}Input`).value = value;
-            });
-            
-            updatePricingDisplay();
-            updateTotalValidation();
-            
-            console.log('[Admin] Config loaded successfully');
-        }
-    } catch (error) {
-        console.error('[Admin] Error loading config:', error);
-        throw error;
-    }
-}
-
-// Load responses from Firebase
-async function loadResponses() {
-    try {
-        console.log('[Admin] Loading responses...');
-        responses = await firebaseAPI.getResponses();
-        console.log(`[Admin] Loaded ${responses.length} responses`);
-    } catch (error) {
-        console.error('[Admin] Error loading responses:', error);
-        throw error;
-    }
-}
-
-// Load archives from Firebase
-async function loadArchives() {
-    try {
-        console.log('[Admin] Loading archives...');
-        const data = await firebaseAPI.getArchives();
-        archives = data ? Object.entries(data).map(([id, archive]) => ({ id, ...archive })) : [];
-        console.log(`[Admin] Loaded ${archives.length} archives`);
-    } catch (error) {
-        console.error('[Admin] Error loading archives:', error);
-        // Not critical, continue
-    }
+// Load all data
+async function loadAllData() {
+    config = await firebaseAPI.getConfig();
+    responses = await firebaseAPI.getAllResponses();
+    
+    console.log('[Admin] Loaded', responses.length, 'responses');
+    
+    updateStatistics();
+    renderCharts();
+    renderResponsesTable();
+    loadConfigToForm();
+    loadArchives();
 }
 
 // Update statistics cards
 function updateStatistics() {
-    const attending = responses.filter(r => r.attendance === "Yes, I'll attend");
-    const totalCost = config.basePrice;
+    const totalResponses = responses.length;
+    const attending = responses.filter(r => r.attendance === 'Yes, I\'ll attend').length;
+    const totalCost = calculateTotalCost();
     
-    // Calculate total paid
-    let totalPaid = 0;
-    attending.forEach(response => {
-        if (response.paymentStatus) {
-            const amount = response.customAmount || calculateAmount(response.position);
-            totalPaid += amount;
+    document.getElementById('total-responses').textContent = totalResponses;
+    document.getElementById('attending-count').textContent = attending;
+    document.getElementById('total-cost').textContent = `¥${totalCost.toLocaleString()}`;
+}
+
+// Calculate total cost
+function calculateTotalCost() {
+    const basePrice = parseInt(config.basePrice) || 10000;
+    const pricing = config.pricing || {};
+    
+    let total = 0;
+    
+    responses.filter(r => r.attendance === 'Yes, I\'ll attend').forEach(response => {
+        if (response.customAmount) {
+            total += response.customAmount;
+        } else {
+            const percentage = getPositionPercentage(response.position, pricing);
+            total += basePrice * (percentage / 100);
         }
     });
     
-    document.getElementById('totalResponses').textContent = responses.length;
-    document.getElementById('attendingCount').textContent = attending.length;
-    document.getElementById('totalCost').textContent = `¥${totalCost.toLocaleString()}`;
-    document.getElementById('totalPaid').textContent = `¥${totalPaid.toLocaleString()}`;
+    return Math.round(total);
 }
 
-// Calculate amount for a position
-function calculateAmount(position) {
-    const positionKey = position.toLowerCase().replace(/['\/\s]/g, '').replace('students', '').replace('student', '').replace('facultystaff', 'faculty');
-    const percentage = config.pricing[positionKey] || 0;
-    return Math.round((config.basePrice * percentage) / 100);
-}
-
-// Update charts
-function updateCharts() {
-    updatePositionChart();
-    updateDatePopularityChart();
-}
-
-// Update position breakdown chart
-function updatePositionChart() {
-    const canvas = document.getElementById('positionChart');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Destroy existing chart
-    if (charts.position) {
-        charts.position.destroy();
-    }
-    
-    // Count by position
-    const positionCounts = {
-        'Bachelor Student': 0,
-        "Master's Student": 0,
-        'PhD Student': 0,
-        'Faculty/Staff': 0
+// Get percentage for position
+function getPositionPercentage(position, pricing) {
+    const map = {
+        'Bachelor Student': pricing.bachelor || 15,
+        'Master\'s Student': pricing.master || 20,
+        'PhD Student': pricing.phd || 30,
+        'Faculty/Staff': pricing.faculty || 35
     };
-    
-    responses.filter(r => r.attendance === "Yes, I'll attend").forEach(r => {
-        if (positionCounts.hasOwnProperty(r.position)) {
-            positionCounts[r.position]++;
-        }
+    return map[position] || 0;
+}
+
+// Render charts
+function renderCharts() {
+    renderAttendanceChart();
+    renderDatePopularityChart();
+}
+
+// Render attendance breakdown chart
+function renderAttendanceChart() {
+    const positions = {};
+    responses.filter(r => r.attendance === 'Yes, I\'ll attend').forEach(r => {
+        positions[r.position] = (positions[r.position] || 0) + 1;
     });
     
-    // Create chart
-    charts.position = new Chart(ctx, {
-        type: 'doughnut',
+    const ctx = document.getElementById('attendance-chart');
+    if (charts.attendance) charts.attendance.destroy();
+    
+    charts.attendance = new Chart(ctx, {
+        type: 'pie',
         data: {
-            labels: Object.keys(positionCounts),
+            labels: Object.keys(positions),
             datasets: [{
-                data: Object.values(positionCounts),
-                backgroundColor: [
-                    'rgba(102, 126, 234, 0.8)',
-                    'rgba(241, 147, 251, 0.8)',
-                    'rgba(79, 172, 254, 0.8)',
-                    'rgba(67, 233, 123, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(102, 126, 234, 1)',
-                    'rgba(241, 147, 251, 1)',
-                    'rgba(79, 172, 254, 1)',
-                    'rgba(67, 233, 123, 1)'
-                ],
-                borderWidth: 2
+                data: Object.values(positions),
+                backgroundColor: ['#667eea', '#764ba2', '#48bb78', '#ed8936']
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                title: {
-                    display: false
-                }
-            }
+            maintainAspectRatio: true
         }
     });
 }
 
-// Update date popularity chart
-function updateDatePopularityChart() {
-    const canvas = document.getElementById('datePopularityChart');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Destroy existing chart
-    if (charts.datePopularity) {
-        charts.datePopularity.destroy();
-    }
-    
-    // Count date selections
+// Render date popularity chart
+function renderDatePopularityChart() {
     const dateCounts = {};
-    responses.filter(r => r.attendance === "Yes, I'll attend" && r.selectedDates).forEach(r => {
-        const dates = r.selectedDates.split(',').map(d => d.trim());
-        dates.forEach(date => {
-            if (date) {
-                dateCounts[date] = (dateCounts[date] || 0) + 1;
-            }
-        });
+    
+    responses.filter(r => r.attendance === 'Yes, I\'ll attend').forEach(response => {
+        if (response.selectedDates) {
+            response.selectedDates.split(',').forEach(date => {
+                const trimmed = date.trim();
+                if (trimmed) {
+                    dateCounts[trimmed] = (dateCounts[trimmed] || 0) + 1;
+                }
+            });
+        }
     });
     
-    // Sort by count (descending)
-    const sortedDates = Object.entries(dateCounts).sort((a, b) => b[1] - a[1]);
+    const sortedDates = Object.keys(dateCounts).sort();
+    const counts = sortedDates.map(date => dateCounts[date]);
     
-    // Create chart
+    const ctx = document.getElementById('date-popularity-chart');
+    if (charts.datePopularity) charts.datePopularity.destroy();
+    
     charts.datePopularity = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: sortedDates.map(d => d[0]),
+            labels: sortedDates.map(d => formatDate(d)),
             datasets: [{
-                label: 'Number of Selections',
-                data: sortedDates.map(d => d[1]),
-                backgroundColor: 'rgba(67, 233, 123, 0.8)',
-                borderColor: 'rgba(67, 233, 123, 1)',
-                borderWidth: 2
+                label: 'Number of People',
+                data: counts,
+                backgroundColor: '#667eea'
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: false
-                }
-            },
+            maintainAspectRatio: true,
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
+                    ticks: { stepSize: 1 }
                 }
             }
         }
     });
 }
 
-// Update responses table
-function updateResponsesTable() {
-    const tbody = document.getElementById('responsesTableBody');
+// Format date for display
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// Render responses table
+function renderResponsesTable() {
+    const tbody = document.getElementById('responses-tbody');
     tbody.innerHTML = '';
     
+    const basePrice = parseInt(config.basePrice) || 10000;
+    const pricing = config.pricing || {};
+    
     responses.forEach(response => {
-        const amount = response.customAmount || calculateAmount(response.position);
-        const isCustom = response.customAmount ? 'amount-custom' : '';
-        const editIcon = response.customAmount ? ' <i class="fas fa-edit"></i>' : '';
+        const row = tbody.insertRow();
         
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${response.name}</td>
-            <td>${response.attendance}</td>
-            <td>${response.position}</td>
-            <td>${response.selectedDates || 'N/A'}</td>
-            <td class="amount-cell ${isCustom}" data-id="${response.id}">
-                ¥${amount.toLocaleString()}${editIcon}
-            </td>
-            <td>
-                <input type="checkbox" class="payment-checkbox" data-id="${response.id}" ${response.paymentStatus ? 'checked' : ''}>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="deleteResponse('${response.id}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add click handlers for amount cells
-    document.querySelectorAll('.amount-cell').forEach(cell => {
-        cell.addEventListener('click', (e) => {
-            const id = e.currentTarget.getAttribute('data-id');
-            openEditAmountModal(id);
-        });
-    });
-    
-    // Add change handlers for payment checkboxes
-    document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', async (e) => {
-            const id = e.target.getAttribute('data-id');
-            const paid = e.target.checked;
-            await updatePaymentStatus(id, paid);
-        });
-    });
-}
-
-// Open edit amount modal
-function openEditAmountModal(responseId) {
-    const response = responses.find(r => r.id === responseId);
-    if (!response) return;
-    
-    currentEditingResponseId = responseId;
-    const defaultAmount = calculateAmount(response.position);
-    const customAmount = response.customAmount || defaultAmount;
-    
-    document.getElementById('editName').textContent = response.name;
-    document.getElementById('editPosition').textContent = response.position;
-    document.getElementById('editDefaultAmount').textContent = `¥${defaultAmount.toLocaleString()}`;
-    document.getElementById('customAmount').value = customAmount;
-    
-    document.getElementById('editAmountModal').style.display = 'block';
-}
-
-// Save custom amount
-async function saveCustomAmount() {
-    if (!currentEditingResponseId) return;
-    
-    const amount = parseInt(document.getElementById('customAmount').value);
-    if (isNaN(amount) || amount < 0) {
-        showToast('Please enter a valid amount', 'error');
-        return;
-    }
-    
-    try {
-        await firebaseAPI.updateResponse(currentEditingResponseId, {
-            customAmount: amount,
-            isEdited: true
-        });
+        row.insertCell().textContent = response.name;
+        row.insertCell().textContent = response.attendance;
+        row.insertCell().textContent = response.position;
+        row.insertCell().textContent = response.selectedDates || '-';
         
-        // Update local data
-        const response = responses.find(r => r.id === currentEditingResponseId);
-        if (response) {
-            response.customAmount = amount;
-            response.isEdited = true;
+        // Amount cell (editable)
+        const amountCell = row.insertCell();
+        if (response.attendance === 'Yes, I\'ll attend') {
+            const amount = response.customAmount || 
+                Math.round(basePrice * (getPositionPercentage(response.position, pricing) / 100));
+            amountCell.textContent = `¥${amount.toLocaleString()}`;
+            amountCell.className = response.isEdited ? 'amount-cell custom' : 'amount-cell';
+            amountCell.onclick = () => editAmount(response);
+            if (response.isEdited) {
+                amountCell.title = 'Custom amount (edited)';
+                amountCell.innerHTML += ' <i class="fas fa-edit"></i>';
+            }
+        } else {
+            amountCell.textContent = '-';
         }
         
-        updateResponsesTable();
-        updateStatistics();
-        document.getElementById('editAmountModal').style.display = 'none';
-        showToast('Amount updated successfully!', 'success');
-    } catch (error) {
-        console.error('[Admin] Error updating amount:', error);
-        showToast('Error updating amount: ' + error.message, 'error');
-    }
+        // Payment checkbox
+        const paymentCell = row.insertCell();
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'payment-checkbox';
+        checkbox.checked = response.paymentStatus;
+        checkbox.onchange = () => togglePayment(response.id, checkbox.checked);
+        paymentCell.appendChild(checkbox);
+        
+        // Timestamp
+        const date = new Date(response.timestamp);
+        row.insertCell().textContent = date.toLocaleString();
+    });
 }
 
-// Reset amount to default
-async function resetAmount() {
-    if (!currentEditingResponseId) return;
+// Edit amount modal
+function editAmount(response) {
+    const modal = document.getElementById('edit-amount-modal');
+    const input = document.getElementById('edit-amount-input');
+    const nameDisplay = document.getElementById('edit-amount-name');
     
-    try {
-        await firebaseAPI.updateResponse(currentEditingResponseId, {
+    const basePrice = parseInt(config.basePrice) || 10000;
+    const pricing = config.pricing || {};
+    const defaultAmount = Math.round(basePrice * (getPositionPercentage(response.position, pricing) / 100));
+    
+    nameDisplay.textContent = `Editing amount for: ${response.name}`;
+    input.value = response.customAmount || defaultAmount;
+    modal.style.display = 'flex';
+    
+    document.getElementById('save-amount-btn').onclick = async () => {
+        const newAmount = parseInt(input.value);
+        await firebaseAPI.updateResponse(response.id, {
+            customAmount: newAmount,
+            isEdited: true
+        });
+        modal.style.display = 'none';
+        await loadAllData();
+    };
+    
+    document.getElementById('reset-amount-btn').onclick = async () => {
+        await firebaseAPI.updateResponse(response.id, {
             customAmount: null,
             isEdited: false
         });
-        
-        // Update local data
-        const response = responses.find(r => r.id === currentEditingResponseId);
-        if (response) {
-            delete response.customAmount;
-            response.isEdited = false;
-        }
-        
-        updateResponsesTable();
-        updateStatistics();
-        document.getElementById('editAmountModal').style.display = 'none';
-        showToast('Amount reset to default!', 'success');
-    } catch (error) {
-        console.error('[Admin] Error resetting amount:', error);
-        showToast('Error resetting amount: ' + error.message, 'error');
-    }
+        modal.style.display = 'none';
+        await loadAllData();
+    };
+    
+    document.querySelectorAll('.modal-close').forEach(btn => {
+        btn.onclick = () => modal.style.display = 'none';
+    });
 }
 
-// Update payment status
-async function updatePaymentStatus(responseId, paid) {
-    try {
-        await firebaseAPI.updateResponse(responseId, { paymentStatus: paid });
-        
-        // Update local data
-        const response = responses.find(r => r.id === responseId);
-        if (response) {
-            response.paymentStatus = paid;
-        }
-        
-        updateStatistics();
-        showToast('Payment status updated!', 'success');
-    } catch (error) {
-        console.error('[Admin] Error updating payment status:', error);
-        showToast('Error updating payment status: ' + error.message, 'error');
-    }
+// Toggle payment status
+async function togglePayment(responseId, status) {
+    await firebaseAPI.updateResponse(responseId, { paymentStatus: status });
+    await loadAllData();
 }
 
-// Delete response
-async function deleteResponse(responseId) {
-    if (!confirm('Are you sure you want to delete this response?')) return;
+// Setup pricing controls (sliders + inputs)
+function setupPricingControls() {
+    const positions = ['bachelor', 'master', 'phd', 'faculty'];
     
-    try {
-        await firebaseAPI.deleteResponse(responseId);
-        responses = responses.filter(r => r.id !== responseId);
+    positions.forEach(position => {
+        const slider = document.getElementById(`${position}-percentage`);
+        const input = document.getElementById(`${position}-percentage-input`);
         
-        updateResponsesTable();
-        updateStatistics();
-        updateCharts();
-        showToast('Response deleted!', 'success');
-    } catch (error) {
-        console.error('[Admin] Error deleting response:', error);
-        showToast('Error deleting response: ' + error.message, 'error');
-    }
-}
-
-// Filter responses
-function filterResponses() {
-    const paidOnly = document.getElementById('filterPaidOnly').checked;
-    const unpaidOnly = document.getElementById('filterUnpaidOnly').checked;
-    
-    let filteredResponses = [...responses];
-    
-    if (paidOnly) {
-        filteredResponses = filteredResponses.filter(r => r.paymentStatus);
-    }
-    if (unpaidOnly) {
-        filteredResponses = filteredResponses.filter(r => !r.paymentStatus);
-    }
-    
-    // Temporarily replace responses for table update
-    const originalResponses = responses;
-    responses = filteredResponses;
-    updateResponsesTable();
-    responses = originalResponses;
-}
-
-// Save pricing configuration
-async function savePricingConfig() {
-    // Validate total percentage
-    if (!updateTotalValidation()) {
-        showToast('Total percentage must equal 100%!', 'error');
-        return;
-    }
-    
-    try {
-        await firebaseAPI.updateConfig({
-            basePrice: config.basePrice,
-            pricing: config.pricing
+        // Set initial values
+        const value = config.pricing?.[position] || 0;
+        slider.value = value;
+        input.value = value;
+        
+        // Two-way binding: slider → input
+        slider.addEventListener('input', () => {
+            input.value = slider.value;
+            updateAmountDisplay(position);
+            updateTotalPercentage();
         });
         
-        showToast('Pricing configuration saved!', 'success');
-        updatePricingDisplay();
-        updateResponsesTable();
-        updateStatistics();
-    } catch (error) {
-        console.error('[Admin] Error saving pricing:', error);
-        showToast('Error saving pricing: ' + error.message, 'error');
+        // Two-way binding: input → slider
+        input.addEventListener('input', () => {
+            const value = parseFloat(input.value);
+            if (value >= 0 && value <= 100) {
+                slider.value = value;
+                updateAmountDisplay(position);
+                updateTotalPercentage();
+            }
+        });
+    });
+    
+    // Base price changes
+    document.getElementById('base-price').addEventListener('input', () => {
+        positions.forEach(pos => updateAmountDisplay(pos));
+    });
+    
+    updateAllAmountDisplays();
+    updateTotalPercentage();
+}
+
+// Update amount display for a position
+function updateAmountDisplay(position) {
+    const basePrice = parseInt(document.getElementById('base-price').value) || 10000;
+    const percentage = parseFloat(document.getElementById(`${position}-percentage-input`).value);
+    const amount = Math.round(basePrice * (percentage / 100));
+    document.getElementById(`${position}-amount`).textContent = `¥${amount.toLocaleString()}`;
+}
+
+// Update all amount displays
+function updateAllAmountDisplays() {
+    ['bachelor', 'master', 'phd', 'faculty'].forEach(pos => updateAmountDisplay(pos));
+}
+
+// Update total percentage validation
+function updateTotalPercentage() {
+    const total = ['bachelor', 'master', 'phd', 'faculty']
+        .reduce((sum, pos) => {
+            return sum + parseFloat(document.getElementById(`${pos}-percentage-input`).value || 0);
+        }, 0);
+    
+    const totalDisplay = document.getElementById('total-percentage');
+    const validationIcon = document.getElementById('total-validation');
+    
+    totalDisplay.textContent = total.toFixed(1);
+    
+    if (Math.abs(total - 100) < 0.01) {
+        validationIcon.className = 'validation-icon valid';
+        validationIcon.title = 'Valid: Total is 100%';
+    } else {
+        validationIcon.className = 'validation-icon invalid';
+        validationIcon.title = `Invalid: Total is ${total.toFixed(1)}%, should be 100%`;
     }
 }
 
-// Generate dates
-function generateDates() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+// Load config to form
+function loadConfigToForm() {
+    document.getElementById('poll-title').value = config.pollTitle || '';
+    document.getElementById('start-date').value = config.startDate || '';
+    document.getElementById('end-date').value = config.endDate || '';
+    document.getElementById('base-price').value = config.basePrice || 10000;
     
-    if (!startDate || !endDate) {
-        showToast('Please select both start and end dates', 'error');
-        return;
+    if (config.startDate && config.endDate) {
+        updateDatesPreview();
     }
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (start > end) {
-        showToast('Start date must be before end date', 'error');
-        return;
-    }
-    
-    const dates = [];
-    const current = new Date(start);
-    
-    while (current <= end) {
-        dates.push(current.toISOString().split('T')[0]);
-        current.setDate(current.getDate() + 1);
-    }
-    
-    const preview = document.getElementById('datePreview');
-    preview.textContent = `${dates.length} dates from ${startDate} to ${endDate}`;
-    
-    config.startDate = startDate;
-    config.endDate = endDate;
-    config.availableDates = dates;
-    
-    showToast('Dates generated! Click "Save Configuration" to apply.', 'info');
 }
 
-// Save configuration
-async function saveConfig() {
-    const pollTitle = document.getElementById('pollTitle').value;
+// Update dates preview
+function updateDatesPreview() {
+    const start = document.getElementById('start-date').value;
+    const end = document.getElementById('end-date').value;
     
-    if (!pollTitle.trim()) {
-        showToast('Please enter a poll title', 'error');
-        return;
-    }
-    
-    try {
-        config.pollTitle = pollTitle;
-        await firebaseAPI.updateConfig(config);
+    if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
         
-        showToast('Configuration saved successfully!', 'success');
-    } catch (error) {
-        console.error('[Admin] Error saving config:', error);
-        showToast('Error saving configuration: ' + error.message, 'error');
+        document.getElementById('dates-preview').textContent = 
+            `${days} dates from ${formatDate(start)} to ${formatDate(end)}`;
     }
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        sessionStorage.removeItem('adminLoggedIn');
+        window.location.href = 'admin-login.html';
+    });
+    
+    document.getElementById('refresh-btn').addEventListener('click', loadAllData);
+    
+    document.getElementById('save-pricing-btn').addEventListener('click', async () => {
+        const pricing = {
+            bachelor: parseFloat(document.getElementById('bachelor-percentage-input').value),
+            master: parseFloat(document.getElementById('master-percentage-input').value),
+            phd: parseFloat(document.getElementById('phd-percentage-input').value),
+            faculty: parseFloat(document.getElementById('faculty-percentage-input').value)
+        };
+        
+        const basePrice = parseInt(document.getElementById('base-price').value);
+        
+        await firebaseAPI.updateConfig({ pricing, basePrice });
+        alert('Pricing saved successfully!');
+        await loadAllData();
+    });
+    
+    document.getElementById('save-config-btn').addEventListener('click', async () => {
+        const pollTitle = document.getElementById('poll-title').value;
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        
+        let availableDates = config.availableDates || '';
+        
+        await firebaseAPI.updateConfig({ pollTitle, startDate, endDate, availableDates });
+        alert('Configuration saved!');
+        await loadAllData();
+    });
+    
+    document.getElementById('generate-dates-btn').addEventListener('click', async () => {
+        const start = document.getElementById('start-date').value;
+        const end = document.getElementById('end-date').value;
+        
+        if (!start || !end) {
+            alert('Please select both start and end dates');
+            return;
+        }
+        
+        const dates = generateDateRange(start, end);
+        await firebaseAPI.updateConfig({ availableDates: dates.join(',') });
+        alert(`Generated ${dates.length} dates!`);
+        updateDatesPreview();
+    });
+    
+    document.getElementById('start-date').addEventListener('change', updateDatesPreview);
+    document.getElementById('end-date').addEventListener('change', updateDatesPreview);
+    
+    document.getElementById('start-new-vote-btn').addEventListener('click', startNewVote);
+    document.getElementById('save-archive-btn').addEventListener('click', saveArchive);
+    
+    document.getElementById('export-xlsx-btn').addEventListener('click', exportXLSX);
+    document.getElementById('export-pdf-btn').addEventListener('click', exportPDF);
+    document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
+}
+
+// Generate date range
+function generateDateRange(start, end) {
+    const dates = [];
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toISOString().split('T')[0]);
+    }
+    
+    return dates;
 }
 
 // Start new vote
 async function startNewVote() {
-    const confirmed = confirm('This will archive the current poll data and start fresh. Continue?');
-    if (!confirmed) return;
+    if (!confirm('This will archive current poll and clear all responses. Continue?')) return;
     
-    try {
-        showLoading('Starting new vote...');
-        
-        // Create archive name
-        const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 16);
-        const archiveName = `${config.pollTitle} - ${timestamp}`;
-        
-        // Save archive
-        await firebaseAPI.saveArchive(archiveName, {
-            responses,
-            config,
-            createdDate: new Date().toISOString()
-        });
-        
-        // Clear responses
-        await firebaseAPI.clearResponses();
-        
-        hideLoading();
-        showToast('New vote started! Previous data archived.', 'success');
-        
-        // Reload dashboard
-        await loadDashboardData();
-    } catch (error) {
-        console.error('[Admin] Error starting new vote:', error);
-        hideLoading();
-        showToast('Error starting new vote: ' + error.message, 'error');
-    }
-}
-
-// Save archive manually
-async function saveArchiveManually() {
-    const archiveName = prompt('Enter archive name:', `${config.pollTitle} - ${new Date().toISOString().substring(0, 10)}`);
+    const archiveName = prompt('Archive name:', `${config.pollTitle} - ${new Date().toLocaleDateString()}`);
     if (!archiveName) return;
     
-    try {
-        showLoading('Saving archive...');
-        
-        await firebaseAPI.saveArchive(archiveName, {
-            responses,
-            config,
-            createdDate: new Date().toISOString()
-        });
-        
-        hideLoading();
-        showToast('Archive saved successfully!', 'success');
-        
-        // Reload archives
-        await loadArchives();
-        updateArchivesList();
-    } catch (error) {
-        console.error('[Admin] Error saving archive:', error);
-        hideLoading();
-        showToast('Error saving archive: ' + error.message, 'error');
-    }
+    await firebaseAPI.saveArchive(archiveName, { responses, config });
+    await firebaseAPI.clearAllResponses();
+    alert('New vote started! Previous data archived.');
+    await loadAllData();
 }
 
-// Update archives list
-function updateArchivesList() {
-    const container = document.getElementById('archivesList');
+// Save archive
+async function saveArchive() {
+    const archiveName = prompt('Archive name:', `${config.pollTitle} - ${new Date().toLocaleDateString()}`);
+    if (!archiveName) return;
     
-    if (archives.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #718096;">No archives yet</p>';
-        return;
-    }
+    await firebaseAPI.saveArchive(archiveName, { responses, config });
+    alert('Archive saved successfully!');
+    await loadArchives();
+}
+
+// Load archives
+async function loadArchives() {
+    const archives = await firebaseAPI.getAllArchives();
+    const container = document.getElementById('archives-list');
+    container.innerHTML = '';
     
-    container.innerHTML = archives.map(archive => `
-        <div class="archive-item">
+    archives.forEach(archive => {
+        const div = document.createElement('div');
+        div.className = 'archive-item';
+        div.innerHTML = `
             <div class="archive-info">
-                <h3>${archive.archiveName || archive.id}</h3>
-                <p>${new Date(archive.createdDate).toLocaleString()}</p>
+                <h3>${archive.archiveName}</h3>
+                <p>${new Date(archive.createdDate).toLocaleString()} | 
+                   ${archive.archiveData.responses?.length || 0} responses</p>
             </div>
             <div class="archive-actions">
-                <button class="btn btn-sm btn-info" onclick="viewArchive('${archive.id}')">
+                <button class="btn btn-secondary" onclick="viewArchive('${archive.id}')">
                     <i class="fas fa-eye"></i> View
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteArchive('${archive.id}')">
+                <button class="btn btn-primary" onclick="exportArchive('${archive.id}')">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-secondary" onclick="deleteArchive('${archive.id}')">
                     <i class="fas fa-trash"></i> Delete
                 </button>
             </div>
-        </div>
-    `).join('');
+        `;
+        container.appendChild(div);
+    });
 }
 
-// View archive (placeholder)
-function viewArchive(archiveId) {
-    showToast('Archive viewing feature coming soon!', 'info');
-}
-
-// Delete archive
-async function deleteArchive(archiveId) {
-    if (!confirm('Are you sure you want to delete this archive?')) return;
+// Export functions
+function exportXLSX() {
+    const data = responses.map(r => ({
+        Name: r.name,
+        Attendance: r.attendance,
+        Position: r.position,
+        'Selected Dates': r.selectedDates || '-',
+        'Payment Status': r.paymentStatus ? 'Paid' : 'Not Paid',
+        Timestamp: new Date(r.timestamp).toLocaleString()
+    }));
     
-    try {
-        await firebaseAPI.deleteArchive(archiveId);
-        archives = archives.filter(a => a.id !== archiveId);
-        
-        updateArchivesList();
-        showToast('Archive deleted!', 'success');
-    } catch (error) {
-        console.error('[Admin] Error deleting archive:', error);
-        showToast('Error deleting archive: ' + error.message, 'error');
-    }
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Responses");
+    XLSX.writeFile(wb, `poll-responses-${Date.now()}.xlsx`);
 }
 
-// Export functions (placeholder implementations)
-function exportToExcel() {
-    showToast('Excel export feature coming soon!', 'info');
+function exportPDF() {
+    alert('PDF export functionality - Use browser print to PDF for now');
+    window.print();
 }
 
-function exportToPdf() {
-    showToast('PDF export feature coming soon!', 'info');
-}
-
-function exportToCsv() {
-    const csvContent = convertToCSV(responses);
-    downloadFile(csvContent, 'poll-responses.csv', 'text/csv');
-    showToast('CSV downloaded!', 'success');
-}
-
-function convertToCSV(data) {
-    const headers = ['Name', 'Attendance', 'Position', 'Selected Dates', 'Amount', 'Payment Status'];
-    const rows = data.map(r => [
+function exportCSV() {
+    const headers = ['Name', 'Attendance', 'Position', 'Selected Dates', 'Payment Status', 'Timestamp'];
+    const rows = responses.map(r => [
         r.name,
         r.attendance,
         r.position,
-        r.selectedDates || '',
-        r.customAmount || calculateAmount(r.position),
-        r.paymentStatus ? 'Paid' : 'Unpaid'
+        r.selectedDates || '-',
+        r.paymentStatus ? 'Paid' : 'Not Paid',
+        new Date(r.timestamp).toLocaleString()
     ]);
     
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
-}
-
-function downloadFile(content, filename, type) {
-    const blob = new Blob([content], { type });
+    let csv = headers.join(',') + '\n';
+    rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = `poll-responses-${Date.now()}.csv`;
     a.click();
-    URL.revokeObjectURL(url);
 }
 
-// Logout
-function logout() {
-    sessionStorage.removeItem('adminLoggedIn');
-    window.location.href = 'admin-login.html';
+// Initialize
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeDashboard);
+} else {
+    initializeDashboard();
 }
-
-// UI Helper functions
-function showLoading(message = 'Loading...') {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.querySelector('p').textContent = message;
-        overlay.style.display = 'flex';
-    }
-}
-
-function hideLoading() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
-}
-
-function showToast(message, type = 'info') {
-    console.log(`[Toast ${type.toUpperCase()}] ${message}`);
-    alert(message); // Simple implementation, can be enhanced with a toast library
-}
-
-console.log('[Admin] Script initialization complete');

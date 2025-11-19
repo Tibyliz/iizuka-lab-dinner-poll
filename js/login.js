@@ -1,89 +1,72 @@
-/**
- * Admin Login Logic
- * Simple password-based authentication
- */
+// Admin Login Logic
+console.log('[Login] Script loaded');
 
+// Default admin password (can be changed)
 const ADMIN_PASSWORD = 'iizukalab';
-const SESSION_KEY = 'adminLoggedIn';
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-// ============================================
-// CHECK EXISTING SESSION
-// ============================================
+// DOM Elements
+const loginForm = document.getElementById('login-form');
+const passwordInput = document.getElementById('password');
+const errorMessage = document.getElementById('error-message');
 
-// If already logged in, redirect to admin
-if (sessionStorage.getItem(SESSION_KEY) === 'true') {
-    const loginTime = sessionStorage.getItem('loginTime');
-    const now = Date.now();
-    
-    if (loginTime && (now - parseInt(loginTime)) < SESSION_DURATION) {
-        console.log('[Login] Active session found, redirecting...');
-        window.location.href = 'admin.html';
-    } else {
-        // Session expired
-        sessionStorage.removeItem(SESSION_KEY);
-        sessionStorage.removeItem('loginTime');
-    }
+// Check if already logged in
+if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+    console.log('[Login] Already logged in, redirecting...');
+    window.location.href = 'admin.html';
 }
 
-// ============================================
-// FORM SUBMISSION
-// ============================================
-
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+// Handle login form submission
+loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('[Login] Form submitted');
     
-    const password = document.getElementById('password').value;
-    const loginBtn = document.getElementById('loginBtn');
-    const statusEl = document.getElementById('loginStatus');
+    const password = passwordInput.value;
     
-    console.log('[Login] Login attempt');
-    
-    // Disable button
-    loginBtn.disabled = true;
-    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
-    
-    // Simulate slight delay for UX
-    setTimeout(() => {
-        if (password === ADMIN_PASSWORD) {
-            console.log('[Login] ✅ Password correct');
-            
-            // Set session
-            sessionStorage.setItem(SESSION_KEY, 'true');
-            sessionStorage.setItem('loginTime', Date.now().toString());
-            
-            // Show success
-            statusEl.textContent = '✅ Login successful! Redirecting...';
-            statusEl.className = 'status-message success';
-            statusEl.style.display = 'block';
-            
-            // Redirect after short delay
-            setTimeout(() => {
-                window.location.href = 'admin.html';
-            }, 800);
-            
-        } else {
-            console.log('[Login] ❌ Password incorrect');
-            
-            // Show error
-            statusEl.textContent = '❌ Incorrect password. Please try again.';
-            statusEl.className = 'status-message error';
-            statusEl.style.display = 'block';
-            
-            // Re-enable button
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-            
-            // Clear password field
-            document.getElementById('password').value = '';
-            document.getElementById('password').focus();
-            
-            // Hide error after 3 seconds
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 3000);
-        }
-    }, 500);
+    // Validate password
+    if (password === ADMIN_PASSWORD) {
+        console.log('[Login] Password correct');
+        
+        // Set session
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        
+        // Show success message briefly
+        showSuccess('Login successful! Redirecting...');
+        
+        // Redirect to admin page
+        setTimeout(() => {
+            window.location.href = 'admin.html';
+        }, 500);
+        
+    } else {
+        console.log('[Login] Password incorrect');
+        showError('Incorrect password. Please try again.');
+        passwordInput.value = '';
+        passwordInput.focus();
+    }
 });
 
-console.log('[Login] Script loaded');
+// Show error message
+function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    errorMessage.style.color = '#c33';
+    errorMessage.style.background = '#fee';
+    errorMessage.style.border = '1px solid #fcc';
+    errorMessage.style.padding = '10px';
+    errorMessage.style.borderRadius = '8px';
+    errorMessage.style.marginTop = '10px';
+}
+
+// Show success message
+function showSuccess(message) {
+    errorMessage.textContent = message;
+    errorMessage.style.display = 'block';
+    errorMessage.style.color = '#3c3';
+    errorMessage.style.background = '#efe';
+    errorMessage.style.border = '1px solid #cfc';
+    errorMessage.style.padding = '10px';
+    errorMessage.style.borderRadius = '8px';
+    errorMessage.style.marginTop = '10px';
+}
+
+console.log('[Login] Ready');

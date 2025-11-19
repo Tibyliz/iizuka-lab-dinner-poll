@@ -1,5 +1,6 @@
 // Firebase Configuration
-// Replace with your Firebase project config
+// IMPORTANT: Replace this with YOUR Firebase project configuration!
+// Get this from Firebase Console → Project Settings → Your apps → Config
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -15,8 +16,6 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-
-// Get a reference to the database service
 const database = firebase.database();
 
-console.log('[Firebase] Initialized successfully');
+console.log('[Firebase] Initialized successfully!');

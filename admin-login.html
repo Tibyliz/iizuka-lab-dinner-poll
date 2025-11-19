@@ -7,20 +7,19 @@
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="login-page">
+<body>
     <div class="login-container">
-        <div class="login-card">
+        <div class="login-box">
             <div class="login-header">
-                <i class="fas fa-lock-open"></i>
+                <i class="fas fa-shield-alt"></i>
                 <h1>Admin Login</h1>
-                <p>Enter password to access admin dashboard</p>
+                <p>Iizuka Lab Dinner Poll System</p>
             </div>
 
-            <form id="loginForm">
+            <form id="login-form" class="login-form">
                 <div class="form-group">
                     <label for="password">
-                        <i class="fas fa-key"></i>
-                        Password
+                        <i class="fas fa-lock"></i> Password
                     </label>
                     <input 
                         type="password" 
@@ -28,25 +27,30 @@
                         name="password" 
                         required 
                         placeholder="Enter admin password"
-                        autocomplete="current-password"
+                        autofocus
                     >
                 </div>
 
-                <button type="submit" class="login-btn" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Login
-                </button>
+                <div id="error-message" class="error-message" style="display: none;"></div>
 
-                <div id="loginStatus" class="status-message" style="display: none;"></div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
             </form>
 
-            <div class="back-link">
-                <i class="fas fa-arrow-left"></i>
-                <a href="index.html">Back to Poll</a>
+            <div class="login-footer">
+                <p><a href="index.html"><i class="fas fa-arrow-left"></i> Back to Poll</a></p>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/firebase-api.js"></script>
     <script src="js/login.js"></script>
 </body>
 </html>
